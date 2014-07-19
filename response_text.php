@@ -2,6 +2,7 @@
 
 require_once('class_database.php');
 require_once('function.php');
+require_once('response_fallback.php');
 
 function scan_wx_response_full_match($content, $uid = -1)
 {
@@ -152,6 +153,8 @@ function scan_wx_response_text($content)
 	// 检测部分匹配
 	$result = scan_wx_response_sub_match($escape_content, $uid);
 	if($result !== false) return $result;
+	// 检测 fallback
+	if($uid != -1) return scan_wx_response_fallback($uid);
 	return false;
 }
 

@@ -5,7 +5,7 @@ function scan_error_exit($status, $info = array())
 {
 	header('Content-Type: application/json');
 	$info['status'] = $status;
-	exit(json_encode(array($info)));
+	exit(json_encode($info));
 }
 
 function scan_select_from_result($result)
