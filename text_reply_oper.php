@@ -144,7 +144,7 @@ case 'set_reply_time':
 		$ret = $wx->set_text_reply_time(
 			$_POST['rule_name'],
 			$_POST['reply_type'],
-			scan_wx_str_to_time($_POST['reply_time']));
+			scan_time_to_array($_POST['reply_type'], $_POST['reply_time']));
 	}
 	scan_error_exit($ret);
 default:

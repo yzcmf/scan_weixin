@@ -1,6 +1,7 @@
 <?php
 
 include_once('config.php');
+include_once('function.php');
 
 session_start();
 $wx = new scan_wx_database();
@@ -88,6 +89,7 @@ class scan_wx_database
 		$match_require,
 		$is_full_match = false
 	) {
+		$uid = $this->uid;
 		$rule_type = $is_full_match ? 'full_match' : 'sub_match';
 		$rule_name = trim($rule_name);
 
@@ -143,7 +145,7 @@ class scan_wx_database
 		default:
 			$this->update_meta($id, 'time_type', $time_type);
 			$this->update_meta($id, 'time_range', 
-				scan_time_to_str($time_type, $time));
+				scan_array_to_time($time_type, $time));
 			break;
 		}
 
@@ -226,7 +228,7 @@ class scan_wx_database
 		}
 		$ret['time_type'] = $time_type;
 		if($time_type != SCAN_WX_TIME_ALL)
-			$ret['time_range'] = scan_wx_time_to_array($time_type, $time_range);
+			$ret['time_range'] = scan_time_to_array($time_type, $time_range);
 		$ret['rule_owner'] = $this->get_user_name();
 		$result->free();
 		return $ret;

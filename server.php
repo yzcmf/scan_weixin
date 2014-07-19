@@ -52,7 +52,7 @@ class wechatCallbackapi
 				if($contentStr === false)
 					$contentStr = scan_wx_response_text($keyword);
 				if($contentStr === false)
-					$contentStr = scan_wx_response_fallback($keyword);
+					$contentStr = scan_wx_response_fallback();
 				$resultStr = sprintf($textTpl, $fromUsername, $toUsername, $time, $msgType, $contentStr);
 				echo $resultStr;
 			} else {

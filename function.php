@@ -41,36 +41,51 @@ function scan_time_in_range($time_type, $range)
 {
 	date_default_timezone_set("Asia/Shanghai");
 	$now = getdate();
+	$now_s = strtotime(sprintf("%s-%s-%s %s:%s:%s", 
+		$now['year'], $now['mon'], $now['mday'],
+		$now['hours'], $now['minutes'], $now['seconds']));
 	switch($time_type)
 	{
 	case SCAN_WX_TIME_MONTHLY:
-		if($now['mday'] < $range[0][0] || $now['mday'] > $range[0][1])
-			return false;
-		if($now['hours'] < $range[1][0] || $now['hours'] > $range[1][1])
-			return false;
-		if($now['minutes'] < $range[2][0] || $now['minutes'] > $range[2][1])
-			return false;
-		if($now['seconds'] < $range[3][0] || $now['seconds'] > $range[3][1])
-			return false;
-		return true;
+		$start = strtotime(sprintf("%s-%s-%s %s:%s:%s", 
+			$now['year'], $now['mon'], $range[0][0],
+			$range[0][1], $range[0][2], $range[0][3]));
+		$end = strtotime(sprintf("%s-%s-%s %s:%s:%s", 
+			$now['year'], $now['mon'], $range[1][0],
+			$range[1][1], $range[1][2], $range[1][3]));
+		return $now_s >= $start && $now_s <= $end;
 	case SCAN_WX_TIME_WEEKLY:
 		if($now['wday'] < $range[0][0] || $now['wday'] > $range[0][1])
 			return false;
-		if($now['hours'] < $range[1][0] || $now['hours'] > $range[1][1])
-			return false;
-		if($now['minutes'] < $range[2][0] || $now['minutes'] > $range[2][1])
-			return false;
-		if($now['seconds'] < $range[3][0] || $now['seconds'] > $range[3][1])
-			return false;
-		return true;
+		if($now['wday'] == $range[0][0])
+		{
+			$start = strtotime(sprintf("%s-%s-%s %s:%s:%s", 
+				$now['year'], $now['mon'], $now['mday'],
+				$range[0][1], $range[0][2], $range[0][3]));
+			return $now_s >= $start;
+		} elseif($now['wday'] == $range[1][0]) {
+			$end = strtotime(sprintf("%s-%s-%s %s:%s:%s", 
+				$now['year'], $now['mon'], $now['mday'],
+				$range[1][1], $range[1][2], $range[1][3]));
+			return $now_s <= $end;
+		} else {
+			$start = strtotime(sprintf("%s-%s-%s %s:%s:%s", 
+				$now['year'], $now['mon'], $now['mday'],
+				$range[0][1], $range[0][2], $range[0][3]));
+			$end = strtotime(sprintf("%s-%s-%s %s:%s:%s", 
+				$now['year'], $now['mon'], $now['mday'],
+				$range[1][1], $range[1][2], $range[1][3]));
+			return $now_s >= $start && $now_s <= $end;
+		}
+		break;
 	case SCAN_WX_TIME_DAILY:
-		if($now['hours'] < $range[0][0] || $now['hours'] > $range[0][1])
-			return false;
-		if($now['minutes'] < $range[1][0] || $now['minutes'] > $range[1][1])
-			return false;
-		if($now['seconds'] < $range[2][0] || $now['seconds'] > $range[2][1])
-			return false;
-		return true;
+		$start = strtotime(sprintf("%s-%s-%s %s:%s:%s", 
+			$now['year'], $now['mon'], $now['mday'],
+			$range[0][0], $range[0][1], $range[0][2]));
+		$end = strtotime(sprintf("%s-%s-%s %s:%s:%s", 
+			$now['year'], $now['mon'], $now['mday'],
+			$range[1][0], $range[1][1], $range[1][2]));
+		return $now_s >= $start && $now_s <= $end;
 	}
 
 	return false;
