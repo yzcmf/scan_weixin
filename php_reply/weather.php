@@ -10,17 +10,17 @@ function scan_wx_response_weather_php($content)
 	$content = trim(substr($content, 1 + strpos($content, '#', 1)));
 	$format_str = 'http://api.map.baidu.com/telematics/v3/weather?location=%s&output=json&ak=' . SCAN_WX_BAIDUAPI_AK;
 	if($content) $city = $content;
-	else $city = '福州';
+	else $city = '闽侯';
 	$weather_json = file_get_contents(sprintf($format_str, $city));
 	$weather = json_decode($weather_json);
 	$ret = "";
-	if($weather->status != 'success')
+	if($weather->status !== 'success' and $weather->status !== 0)
 	{
-		$ret .= "没有找到" . $city . "的天气。>_<||| \n";
-		$weather_json = file_get_contents(sprintf($format_str, '福州'));
-		$weather = json_decode($weather_json);
-		if($weather->status != 'success')
-			return "今天好像不能告诉你天气了、( ¯▽¯；)";
+		//print_r($weather->status);
+		$st = $weather->status;
+		if($st === "No result available" || $st === -3)
+			return "没有找到" . $city . "的天气。>_<|||";
+		return "今天好像不能告诉你天气了、( ¯▽¯；)";
 	}
 
 	$sep = "--------\n";
