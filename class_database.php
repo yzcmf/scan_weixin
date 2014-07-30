@@ -306,7 +306,7 @@ class scan_wx_database
 	}
 
 	/* @brief 获得所有规则名称 */
-	public function get_all_rules($uid = -1);
+	public function get_all_rules($uid = -1)
 	{
 		$uid = intval($uid, 10);
 		if($uid == -1) $uid = $this->uid;
@@ -333,7 +333,7 @@ class scan_wx_database
 			"SELECT `index_key`
 			 FROM `reply_meta` 
 			 WHERE `id` = $rid
-			   AND `reply_key` = $name");
+			   AND `reply_key` = '$name'");
 	}
 
 	/* @brief 在 reply_meta 删除信息 */
@@ -381,7 +381,7 @@ class scan_wx_database
 		$value = $this->escape_sql_string($value);
 		$index = intval($index, 10);
 		$this->query("UPDATE `reply_meta`
-				      SET `reply_value` = $value
+				      SET `reply_value` = '$value'
 					  WHERE `index_key` = $index");
 		return true;
 	}
@@ -410,14 +410,14 @@ class scan_wx_database
 
 	/* @brief 获得规则的信息
 	   @param $rule_name 规则的名字 */
-	private function get_rule_info($rule_name, $uid = -1);
+	private function get_rule_info($rule_name, $uid = -1)
 	{
 		$uid = intval($uid, 10);
 		if($uid == -1) $uid = $this->uid;
 		if(!$this->check_uid($uid)) return false;
 		$rule_name = $this->escape_sql_string($rule_name);
 		return $this->get_first_row("SELECT * FROM `reply_map`
-			    WHERE `uid` = $uid AND `rule_name` = $rule_name");
+			    WHERE `uid` = $uid AND `rule_name` = '$rule_name'");
 	}
 
 	/* @brief 查询数据库并获得第一格内容 */

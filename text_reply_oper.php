@@ -50,7 +50,7 @@ case 'remove':
 	$ret = $wx->remove_text_reply($_POST['rule_name'], $uid);
 	scan_error_exit($ret);
 	break;
-case 'remove_key':
+case 'remove_content':
 /* action = 'remove_content'
  * @brief 删除文本自动回复规则某个关键字或回复内容
  * @param content_index 要删除的内容 id */
@@ -59,17 +59,28 @@ case 'remove_key':
 	$content_index = intval($_POST['content_index'], 10);
 	scan_error_exit($wx->remove_text_reply_content($content_index, $uid));
 	break;
+case 'update_content':
+/* action = 'update_content'
+ * @brief 更新文本自动回复规则某个关键字或回复内容
+ * @param content_index 要更新的内容 id 
+ * @param content       要更新的内容 */
+	if(!isset($_POST['content_index'])
+		|| !isset($_POST['content']))
+		scan_error_exit(SCAN_WX_STATUS_ERROR);
+	$content_index = intval($_POST['content_index'], 10);
+	scan_error_exit($wx->update_text_reply_content($content_index, $_POST['content'], $uid));
+	break;
 case 'insert_key':
 /* action = 'insert_key'
  * @brief 插入文本自动回复规则某个关键字
  * @param rule_name 文本自动回复规则的名字 
- * @param keyword   关键字数组 */
+ * @param value   关键字数组 */
 	if(!isset($_POST['rule_name']) || 
-	   !isset($_POST['keyword']))
+	   !isset($_POST['value']))
 		scan_error_exit(SCAN_WX_STATUS_ERROR);
 	$ret = $wx->insert_text_reply_content(
 		$_POST['rule_name'], 
-		$_POST['keyword'], 
+		$_POST['value'], 
 		array(), $uid);
 	scan_error_exit($ret);
 	break;
@@ -77,14 +88,14 @@ case 'insert_reply':
 /* action = 'insert_reply'
  * @brief 插入文本自动回复规则某个回复内容
  * @param rule_name 文本自动回复规则的名字 
- * @param content   回复内容数组 */
+ * @param value   回复内容数组 */
 	if(!isset($_POST['rule_name']) || 
-	   !isset($_POST['content']))
+	   !isset($_POST['value']))
 		scan_error_exit(SCAN_WX_STATUS_ERROR);
 	$ret = $wx->insert_text_reply_content(
 		$_POST['rule_name'], 
 		array(), 
-		$_POST['content'], $uid); 
+		$_POST['value'], $uid); 
 	scan_error_exit($ret);
 	break;
 case 'get_rule_info':
@@ -95,7 +106,7 @@ case 'get_rule_info':
 		scan_error_exit(SCAN_WX_STATUS_ERROR);
 	$ret = $wx->get_text_reply($_POST['rule_name'], $uid);
 	if(!is_array($ret))
-		scan_error_exit(SCAN_WX_STATUS_ERROR);
+		scan_error_exit($ret);
 	else scan_error_exit(SCAN_WX_STATUS_SUCCESS, $ret);
 	break;
 case 'get_all_rules':

@@ -10,6 +10,8 @@ include_once('class_database.php');
 include_once('function.php');
 
 header('Content-Type: application/json');
+if($wx->is_login())
+	session_destroy();
 if(!isset($_POST['username']) || !isset($_POST['password']))
 {
 	scan_error_exit(SCAN_WX_STATUS_ERROR);
