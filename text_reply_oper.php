@@ -98,6 +98,17 @@ case 'insert_reply':
 		$_POST['value'], $uid); 
 	scan_error_exit($ret);
 	break;
+case 'change_rule_name':
+/* action = 'change_rule_name'
+ * @brief 修改规则名称
+ * @param rule_name      规则的名字 
+ * @param rule_name_new  规则的新名字 */
+	if(!isset($_POST['rule_name']) || 
+	   !isset($_POST['rule_name_new']))
+		scan_error_exit(SCAN_WX_STATUS_ERROR);
+	scan_error_exit($wx->rename_rule(
+		$_POST['rule_name'], $_POST['rule_name_new']));
+	break;
 case 'get_rule_info':
 /* action = 'get_rule_info'
  * @brief 获取规则信息

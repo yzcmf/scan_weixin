@@ -122,14 +122,43 @@ function add_tool(elem)
 	elem.append($("<br/>"));
 }
 
-var rule_name = decodeURI($.urlGet()["rule_name"]);
+var rule_name = decodeURIComponent($.urlGet()["rule_name"]);
 
-function init_rule()
+function init_rule(cont)
 {
 	$.post("../text_reply_oper.php?action=get_rule_info", 
 		{ 'rule_name' : rule_name }, function(data) {
 			if(!check_status(data['status']))
-				return;
+				check_status(data['status']);
+
+			// 规则名称设置操作
+			var rule_name_setting = $("<div></div>");
+			rule_name_setting.append($("<label></label>").text("Rule name"));
+			var rns_name = $("<input type=\"text\"/>");
+			rns_name.val(rule_name);
+			rule_name_setting.append(rns_name);
+			var rns_change = $("<input type=\"button\"/>");
+			rns_change.val("Change name");
+			rns_change.click(function() {
+				if(!confirm("真的要修改吗？"))
+					return;
+				$.post("../text_reply_oper.php?action=change_rule_name", 
+					{ 'rule_name' : rule_name, 
+					  'rule_name_new' : rns_name.val() }, 
+					function(data) {
+						if(data['status'] == SCAN_WX_STATUS_SUCCESS)
+						{
+							window.location.search = "?rule_name=" 
+							  + encodeURIComponent(rns_name.val());
+						} else {
+							alert("修改失败!\n" + data['status']);
+						}
+					}, "json");
+			} );
+			rule_name_setting.append(rns_change);
+			cont.append(rule_name_setting);
+
+			// 添加关键字操作
 			var keyword = $("<form></form>");
 			for(k in data['keyword'])
 			{
@@ -144,8 +173,9 @@ function init_rule()
 			}
 
 			change_add(rule_name, keyword, true);
-			$("body").append(keyword);
+			cont.append(keyword);
 
+			// 添加回复操作
 			var content = $("<form></form>");
 			for(k in data['reply'])
 			{
@@ -161,11 +191,11 @@ function init_rule()
 			}
 
 			change_add(rule_name, content, false);
-			$("body").append(content);
+			cont.append(content);
 		}, "json");
 }
 
-init_rule();
+init_rule($("body"));
 </script>
 <?php endif ?>
 	</body>

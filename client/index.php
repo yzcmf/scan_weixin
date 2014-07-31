@@ -9,8 +9,8 @@
 		<link rel="stylesheet" href="style.css" />
 	</head>
 	<body>
-	<?php include("wx-login.php"); ?>
-	<?php include("wx-rule-list.php"); ?>
+	<?php include("wx_login.php"); ?>
+	<?php include("wx_rule_list.php"); ?>
 	</body>
 </html>
 

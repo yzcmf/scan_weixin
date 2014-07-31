@@ -138,6 +138,28 @@ class scan_wx_database
 		return SCAN_WX_STATUS_SUCCESS;
 	}
 
+	/* @brief 重命名规则
+	   @param $rule_name      规则的名字
+	   @param $rule_name_new  规则的新名字 */
+	public function rename_rule(
+		$rule_name, $rule_name_new, $uid = -1)
+	{
+		$uid = intval($uid, 10);
+		if($uid == -1) $uid = $this->uid;
+		if(!$this->check_uid($uid)) 
+			return SCAN_WX_STATUS_FORBIDDEN;
+		$rule = $this->get_rule_info($rule_name, $uid);
+		if($rule === false)
+			return SCAN_WX_STATUS_RULE_NOT_EXIST;
+
+		$rule_name_new = $this->escape_sql_string($rule_name_new);
+		$rid = $rule['id'];
+		$this->query("UPDATE `reply_map`
+				      SET `rule_name` = '$rule_name_new'
+					  WHERE `id` = $rid");
+		return SCAN_WX_STATUS_SUCCESS;
+	}
+
 	/* @brief 设置文本回复的时间
 	   @param $rule_name  规则的名字，用于索引 
 	   @param $time_type  时间类型 
