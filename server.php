@@ -24,8 +24,8 @@ class wechatCallbackapi
 
 	public function responseMsg()
 	{
-//		if(!$this->checkSignature())
-//			exit;
+		if(!$this->checkSignature())
+			exit;
 		//get post data, May be due to the different environments
 		$postStr = file_get_contents("php://input");
 
@@ -51,7 +51,7 @@ class wechatCallbackapi
 				$contentStr = scan_wx_response_php_reply($keyword);
 				if($contentStr === false)
 					$contentStr = scan_wx_response_text($keyword);
-				if($contentStr === false)
+				if($contentStr === false || trim($contentStr) == '')
 					$contentStr = scan_wx_response_fallback();
 				$resultStr = sprintf($textTpl, $fromUsername, $toUsername, $time, $msgType, $contentStr);
 				echo $resultStr;

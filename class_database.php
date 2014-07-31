@@ -246,7 +246,12 @@ class scan_wx_database
 		$content_index = intval($content_index, 10);
 		if($this->get_meta_owner($content_index) != $uid)
 			return SCAN_WX_STATUS_FORBIDDEN;
-		$this->remove_meta($content_index, $uid);
+		$this->query("DELETE FROM `reply_meta`
+				      WHERE `index_key` = $content_index
+					    AND (`reply_key` = 'keyword'
+						  OR `reply_key` = 'reply')");
+		if($this->db->affected_rows == 0)
+			return SCAN_WX_STATUS_FORBIDDEN;
 		return SCAN_WX_STATUS_SUCCESS;
 	}
 
