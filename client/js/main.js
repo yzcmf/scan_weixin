@@ -1,4 +1,5 @@
 var SCAN_WX_STATUS_SUCCESS = "success";
+var SCAN_WX_STATUS_NOLOGIN = "nologin";
 
 function check_status(status)
 {

@@ -52,7 +52,7 @@ function load_rule_list()
 				g.append($("<span></span>").addClass("rule_name").text(rule['name']));
 	//			g.append($("<span></span>").addClass("rule_type").text(rule['type']));
 				g.append($("<a></a>").attr("href", "modify.php?rule_name=" 
-					+ encodeURIComponent(rule['name'])).text("Modify"));
+					+ encodeURIComponent(rule['name'])).text("  Modify"));
 				$.post("../text_reply_oper.php?action=get_rule_info", 
 					{ 'rule_name' : rule['name'] }, 
 					function(cap) {
