@@ -116,7 +116,7 @@ class scan_wx_database
 		$escape_str = $this->escape_sql_string($rule_name);
 		$sql = "INSERT INTO `reply_map` 
 				(uid, rule_name, type) 
-		 VALUES ($uid, '$escape_str', '$rule_type')";
+		 VALUES ($uid, '$escape_str', '$match_type')";
 		$this->query($sql);
 
 		// Get rule info
@@ -126,15 +126,19 @@ class scan_wx_database
 		$rid = $rule['id'];
 
 		// Insert keywords
-		foreach($keyword as $v)
-			$this->insert_meta($rid, 'keyword', trim($v), $uid);
+		if($match_type != 'fallback')
+		{
+			foreach($keyword as $v)
+				$this->insert_meta($rid, 'keyword', trim($v), $uid);
+		}
 		// Insert reply info
 		foreach($reply_info as $v)
 			$this->insert_meta($rid, 'reply', $v, $uid);
 		// Set reply time
 		$this->insert_meta($rid, 'time_type', SCAN_WX_TIME_ALL,  $uid);
 		// Set match time(s)
-		$this->insert_meta($rid, 'match_require', intval($match_require), $uid);
+		if($match_type != 'fallback')
+			$this->insert_meta($rid, 'match_require', intval($match_require), $uid);
 		return SCAN_WX_STATUS_SUCCESS;
 	}
 
@@ -151,6 +155,9 @@ class scan_wx_database
 		$rule = $this->get_rule_info($rule_name, $uid);
 		if($rule === false)
 			return SCAN_WX_STATUS_RULE_NOT_EXIST;
+
+		if($this->get_rule_info($rule_name_new, $uid) !== false)
+			return SCAN_WX_STATUS_RULE_EXIST;
 
 		$rule_name_new = $this->escape_sql_string($rule_name_new);
 		$rid = $rule['id'];
@@ -297,6 +304,7 @@ class scan_wx_database
 				ON r.id = m.id
 				WHERE m.id = $rid";
 		$ret = array();
+		$ret['match_type'] = $rule['type'];
 		$result = $this->query($sql);
 		while($row = $result->fetch_row())
 		{

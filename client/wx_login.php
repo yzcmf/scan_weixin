@@ -1,12 +1,13 @@
+<?php include_once('../class_database.php'); ?>
 <!-- 登陆部分 -->
 <form id="login_form">
-	<label for="username">Username: </label>
-	<input type="text" name="username" id="login_username" />
-	<br />
-	<label for="login_password">Password: </label>
-	<input type="password" id="login_password" />
+	<table border="0">
+		<tr><td><label for="username">Username: </label></td>
+		<td><input type="text" name="username" id="login_username" /></td></tr>
+		<tr><td><label for="login_password">Password: </label></td>
+		<td><input type="password" id="login_password" /></td></tr>
+	</table>
 	<input type="hidden" name="password" id="login_md5" />
-	<br />
 	<input type="submit" id="login_submit" value="Login" />
 </form>
 
@@ -14,17 +15,21 @@
 </form>
 
 <form id="change_passwd_form" style="display: none">
-	<label>Old password：</label>
-	<input type="password" id="change_passwd_old" /> <br />
-	<label>New password：</label>
-	<input type="password" id="change_passwd_new" /> <br />
-	<label>Repeat password：</label>
-	<input type="password" id="change_passwd_repeat" /> <br />
+	<table border="0">
+		<tr><td><label>Old password：</label></td>
+		<td><input type="password" id="change_passwd_old" /></td></tr>
+		<tr><td><label>New password：</label></td>
+		<td><input type="password" id="change_passwd_new" /></td></tr>
+		<tr><td><label>Repeat password：</label></td>
+		<td><input type="password" id="change_passwd_repeat" /></td></tr>
+	</table>
 	<input type="button" id="change_passwd_submit" value="Change" />
+	<input type="button" id="change_passwd_back" value="Back" />
 </form>
 
 <script type="text/javascript">
 $("#login_form").submit( function() {
+	$("#login_submit").attr("disabled", true);
 	var passwd = $.md5($("#login_password").val());
 	$("#login_md5").val(passwd);
 	$.post("../account.php?action=login", $("#login_form").serialize(), 
@@ -34,13 +39,6 @@ $("#login_form").submit( function() {
 	return false;
 } );
 
-// 检测当前是否已经登陆
-$.getJSON("../account.php?action=get_user_info",
-	function(data) {
-		if(data['status'] == SCAN_WX_STATUS_SUCCESS)
-			wx_login_solve(SCAN_WX_STATUS_SUCCESS);
-	} );
-
 function wx_login_solve(status)
 {
 	if(status == SCAN_WX_STATUS_SUCCESS)
@@ -48,6 +46,7 @@ function wx_login_solve(status)
 		load_user_info();
 		load_rule_list();
 		$("#login_form").hide();
+		$("#login_submit").attr("disabled", false);
 		$("#rule_list").fadeIn();
 		$("#user_manager_form").fadeIn();
 	} else {
@@ -55,6 +54,7 @@ function wx_login_solve(status)
 	}
 }
 
+$("#change_passwd_back").click(change_passwd_go_back);
 $("#change_passwd_submit").click( function() {
 	var new_passwd = $("#change_passwd_new").val();
 	var rep_passwd = $("#change_passwd_repeat").val();
@@ -74,21 +74,28 @@ $("#change_passwd_submit").click( function() {
 			{ 
 				alert("密码错误！");
 			} else {
-				$("#change_passwd_new").val("");
-				$("#change_passwd_repeat").val("");
-				$("#change_passwd_old").val("");
-				$("#change_passwd_form").hide();
-				$("#rule_list").fadeIn();
-				$("#user_manager_form").fadeIn();
+				change_passwd_go_back();
 			}
 		}, "json");
 	return false;
 } );
 
+function change_passwd_go_back()
+{
+	$("#change_passwd_new").val("");
+	$("#change_passwd_repeat").val("");
+	$("#change_passwd_old").val("");
+	$("#change_passwd_form").hide();
+	$("#new_rule_form").fadeIn();
+	$("#rule_list").fadeIn();
+	$("#user_manager_form").fadeIn();
+}
+
 function change_passwd()
 {
 	$("#rule_list").hide();
 	$("#user_manager_form").hide();
+	$("#new_rule_form").hide();
 	$("#change_passwd_form").fadeIn();
 }
 
@@ -105,6 +112,8 @@ function load_user_info()
 				$.getJSON("../account.php?action=logout", 
 					function(data) {
 						$("#rule_list").hide();
+						$("#new_rule_form").hide();
+						$("body").append($("#new_rule_form"));
 						$("#user_manager_form").empty();
 						$("#user_manager_form").hide();
 						$("#rule_list").empty();
@@ -127,4 +136,14 @@ function load_user_info()
 		} );
 }
 </script>
+
+<?php if($wx->is_login()): ?>
+<script type="text/javascript">
+// 当前已经登陆
+$("#login_submit").attr("disabled", true);
+$(document).ready( function() {
+	wx_login_solve(SCAN_WX_STATUS_SUCCESS);
+} );
+</script>
+<?php endif ?>
 <!-- /登陆部分 -->

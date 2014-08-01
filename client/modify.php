@@ -5,6 +5,8 @@ require_once('../class_database.php');
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" href="style.css" />
+		<link rel="stylesheet" href="modify.css" />
 		<script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
 		<script type="text/javascript" src="js/main.js"></script>
 		<script type="text/javascript">
@@ -35,6 +37,7 @@ require_once('../class_database.php');
 <?php elseif($wx->is_login() == false): ?>
 	请先登陆！
 <?php else: ?>
+	<p id="please_waiting">Please Waiting...</p>
 <script type="text/javascript">
 
 function change_post()
@@ -133,7 +136,7 @@ function change_add(rule_name, elem, is_key)
 								var t = $("#" + type + "_box").children("." + type + "_elem");
 								if(t.length == 0)
 								{
-									$("#" + type + "_box").children().first().after(block);
+									$("#" + type + "_box").children().first().before(block);
 								} else {
 									t.last().after(block);
 								}
@@ -224,16 +227,30 @@ function init_rule(cont)
 					}, "json");
 			} );
 			rule_name_setting.append(rns_change);
+
+			// 添加返回按钮
+			var go_back_button = $("<input type=\"button\"/>");
+			go_back_button.val("Go back");
+			go_back_button.click( function() {
+				window.open("index.php", "_self");
+			} );
+			rule_name_setting.append(go_back_button);
+
 			cont.append(rule_name_setting);
 
-			add_tool(cont, "keyword", data);
+
+			if(data['match_type'] != 'fallback')
+				add_tool(cont, "keyword", data);
 			add_tool(cont, "reply", data);
+			$("#please_waiting").remove();
+			cont.fadeIn();
 		}, "json");
 }
 
 var box = $("<div></div>");
 box.attr("id", "reply_rule_editor");
 init_rule(box);
+box.hide();
 $("body").append(box);
 </script>
 <?php endif ?>
