@@ -1,0 +1,111 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<script type="text/javascript" src="js/jquery-1.8.3.min.js"></script>
+		<script type="text/javascript" src="js/jquery.iDialog.min.js" dialog-theme="default"></script>
+		<script type="text/javascript" src="js/function.js"></script>
+		<script type="text/javascript" src="js/main.js"></script>
+		<script type="text/javascript" src="js/rule.js"></script>
+		<link rel="stylesheet" href="css/style.css" />
+		<link rel="stylesheet" href="css/rule.css" />
+	</head>
+	<body>
+		<div id="waiting_msg">Please waiting...</div>
+		<!-- real content -->
+		<div id="rule_wrap"></div>
+		<!-- template -->
+		<div id="unshown_wrap" style="display: none">
+			<div class="modify_dialog">
+				<textarea></textarea>
+			</div>
+			<div class="time_type_dialog">
+				请选择你要的类型<br />
+				修改类型会删除该规则当前所有的时间信息<br />
+				<select>
+					<option value="all">all</option>
+					<option value="daily">daily</option>
+					<option value="weekly">weekly</option>
+					<option value="monthly">monthly</option>
+				</select>
+			</div>
+			<div class="daily_time_dialog">
+				<div class="dlg_start_time">
+					<span>开始时间</span>
+					<input type="text" class="lw hour" />
+					<span>:</span>
+					<input type="text" class="lw minute" />
+					<span>:</span>
+					<input type="text" class="lw second" />
+				</div>
+				<div class="dlg_end_time">
+					<span>结束时间</span>
+					<input type="text" class="lw hour" />
+					<span>:</span>
+					<input type="text" class="lw minute" />
+					<span>:</span>
+					<input type="text" class="lw second" />
+				</div>
+			</div>
+			<div class="weekly_time_dialog">
+				<div class="dlg_start_time">
+					<span>开始时间</span>
+					<select class="week">
+						<option value="1">Monday</option>
+						<option value="2">Tuesday</option>
+						<option value="3">Wednesday</option>
+						<option value="4">Thursday</option>
+						<option value="5">Friday</option>
+						<option value="6">Saturday</option>
+						<option value="0">Sunday</option>
+					</select>
+					<input type="text" class="lw hour" />
+					<span>:</span>
+					<input type="text" class="lw minute" />
+					<span>:</span>
+					<input type="text" class="lw second" />
+				</div>
+				<div class="dlg_end_time">
+					<span>结束时间</span>
+					<select class="week">
+						<option value="1">Monday</option>
+						<option value="2">Tuesday</option>
+						<option value="3">Wednesday</option>
+						<option value="4">Thursday</option>
+						<option value="5">Friday</option>
+						<option value="6">Saturday</option>
+						<option value="0">Sunday</option>
+					</select>
+					<input type="text" class="lw hour" />
+					<span>:</span>
+					<input type="text" class="lw minute" />
+					<span>:</span>
+					<input type="text" class="lw second" />
+				</div>
+			</div>
+			<div class="monthly_time_dialog">
+				<div class="dlg_start_time">
+					<span>开始时间</span>
+					<input type="text" class="lw day" />
+					<span>,</span>
+					<input type="text" class="lw hour" />
+					<span>:</span>
+					<input type="text" class="lw minute" />
+					<span>:</span>
+					<input type="text" class="lw second" />
+				</div>
+				<div class="dlg_end_time">
+					<span>结束时间</span>
+					<input type="text" class="lw day" />
+					<span>,</span>
+					<input type="text" class="lw hour" />
+					<span>:</span>
+					<input type="text" class="lw minute" />
+					<span>:</span>
+					<input type="text" class="lw second" />
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
+

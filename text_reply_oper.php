@@ -43,11 +43,11 @@ case 'insert':
 	break;
 /* action = 'remove'
  * @brief 删除文本自动回复规则
- * @param rule_name 文本自动回复规则的名字 */
+ * @param rid 规则的 ID */
 case 'remove':
-	if(!isset($_POST['rule_name']))
+	if(!isset($_POST['rid']))
 		scan_error_exit(SCAN_WX_STATUS_ERROR);
-	$ret = $wx->remove_text_reply($_POST['rule_name'], $uid);
+	$ret = $wx->remove_text_reply($_POST['rid'], $uid);
 	scan_error_exit($ret);
 	break;
 case 'remove_content':
@@ -73,13 +73,13 @@ case 'update_content':
 case 'insert_key':
 /* action = 'insert_key'
  * @brief 插入文本自动回复规则某个关键字
- * @param rule_name 文本自动回复规则的名字 
+ * @param rid     规则的 ID 
  * @param value   关键字数组 */
-	if(!isset($_POST['rule_name']) || 
+	if(!isset($_POST['rid']) || 
 	   !isset($_POST['value']))
 		scan_error_exit(SCAN_WX_STATUS_ERROR);
 	$ret = $wx->insert_text_reply_content(
-		$_POST['rule_name'], 
+		$_POST['rid'], 
 		$_POST['value'], 
 		array(), $uid);
 	scan_error_exit($ret);
@@ -87,13 +87,13 @@ case 'insert_key':
 case 'insert_reply':
 /* action = 'insert_reply'
  * @brief 插入文本自动回复规则某个回复内容
- * @param rule_name 文本自动回复规则的名字 
+ * @param rid     规则的 ID 
  * @param value   回复内容数组 */
-	if(!isset($_POST['rule_name']) || 
+	if(!isset($_POST['rid']) || 
 	   !isset($_POST['value']))
 		scan_error_exit(SCAN_WX_STATUS_ERROR);
 	$ret = $wx->insert_text_reply_content(
-		$_POST['rule_name'], 
+		$_POST['rid'], 
 		array(), 
 		$_POST['value'], $uid); 
 	scan_error_exit($ret);
@@ -101,21 +101,21 @@ case 'insert_reply':
 case 'change_rule_name':
 /* action = 'change_rule_name'
  * @brief 修改规则名称
- * @param rule_name      规则的名字 
+ * @param rid            规则的 ID 
  * @param rule_name_new  规则的新名字 */
-	if(!isset($_POST['rule_name']) || 
+	if(!isset($_POST['rid']) || 
 	   !isset($_POST['rule_name_new']))
 		scan_error_exit(SCAN_WX_STATUS_ERROR);
 	scan_error_exit($wx->rename_rule(
-		$_POST['rule_name'], $_POST['rule_name_new']));
+		$_POST['rid'], $_POST['rule_name_new']));
 	break;
 case 'get_rule_info':
 /* action = 'get_rule_info'
  * @brief 获取规则信息
- * @param rule_name 文本自动回复规则的名字 */
-	if(!isset($_POST['rule_name'])) 
+ * @param rid            规则的 ID */
+	if(!isset($_POST['rid'])) 
 		scan_error_exit(SCAN_WX_STATUS_ERROR);
-	$ret = $wx->get_text_reply($_POST['rule_name'], $uid);
+	$ret = $wx->get_text_reply($_POST['rid'], $uid);
 	if(!is_array($ret))
 		scan_error_exit($ret);
 	else scan_error_exit(SCAN_WX_STATUS_SUCCESS, $ret);
@@ -131,25 +131,54 @@ case 'get_all_rules':
 case 'set_reply_time':
 /* action = 'set_reply_time'
  * @brief 设置回复时间
- * @param rule_name  文本自动回复规则的名字 
- * @param reply_type 文本回复时间类型
- * @param reply_time 文本回复时间串 */
-	if(!isset($_POST['rule_name']) || !isset($_POST['reply_type'])) 
+ * @param rid        规则的 ID 
+ * @param time_type 文本回复时间类型
+ * @param time_str 文本回复时间串 */
+	if(!isset($_POST['rid']) || !isset($_POST['time_type'])) 
 		scan_error_exit(SCAN_WX_STATUS_ERROR);
-	if(!isset($_POST['reply_time']) && $_POST['reply_type'] != SCAN_WX_TIME_ALL)
+	if(!isset($_POST['time_str']) && $_POST['time_type'] != SCAN_WX_TIME_ALL)
 		scan_error_exit(SCAN_WX_STATUS_ERROR);
 
-	if($_POST['reply_type'] == SCAN_WX_TIME_ALL) {
+	if($_POST['time_type'] == SCAN_WX_TIME_ALL) {
 		$ret = $wx->set_text_reply_time(
-			$_POST['rule_name'], 
-			$_POST['reply_type'], $uid);
+			$_POST['rid'], $_POST['time_type'], "", $uid);
 	} else {
 		$ret = $wx->set_text_reply_time(
-			$_POST['rule_name'],
-			$_POST['reply_type'],
-			scan_time_to_array($_POST['reply_type'], $_POST['reply_time']), $uid);
+			$_POST['rid'],
+			$_POST['time_type'],
+			$_POST['time_str'], $uid);
 	}
 	scan_error_exit($ret);
+case 'insert_reply_time':
+/* action = 'insert_reply_time'
+ * @brief 添加回复时间
+ * @param rid        规则的 ID 
+ * @param time_str 文本回复时间串 */
+	if(!isset($_POST['rid']) || !isset($_POST['time_str'])) 
+		scan_error_exit(SCAN_WX_STATUS_ERROR);
+	scan_error_exit($wx->add_text_reply_time(
+		$_POST['rid'], $_POST['time_str'], $uid));
+case 'remove_reply_time':
+/* action = 'remove_reply_time'
+ * @brief 删除回复时间
+ * @param rid        规则的 ID 
+ * @param time_str 文本回复时间串 */
+	if(!isset($_POST['rid']) || !isset($_POST['time_str'])) 
+		scan_error_exit(SCAN_WX_STATUS_ERROR);
+	scan_error_exit($wx->remove_text_reply_time(
+		$_POST['rid'], $_POST['time_str'], $uid));
+case 'change_reply_time':
+/* action = 'change_reply_time'
+ * @brief 修改回复时间
+ * @param rid        规则的 ID 
+ * @param time_old 文本回复时间串 
+ * @param time_new 文本回复时间串 */
+	if(!isset($_POST['rid'])
+		|| !isset($_POST['time_old']) 
+		|| !isset($_POST['time_new']))
+		scan_error_exit(SCAN_WX_STATUS_ERROR);
+	scan_error_exit($wx->update_text_reply_time(
+		$_POST['rid'], $_POST['time_old'], $_POST['time_new'], $uid));
 default:
 	scan_error_exit(SCAN_WX_STATUS_ERROR);
 }

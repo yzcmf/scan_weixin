@@ -31,6 +31,8 @@ function scan_wx_response_fallback($uid = -1)
 	}
 
 	$result->free();
+	if(count($candidate) == 0) 
+		return false;
 	return $candidate[rand(0, count($candidate) - 1)];
 }
 

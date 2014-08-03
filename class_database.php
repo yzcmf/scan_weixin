@@ -143,56 +143,159 @@ class scan_wx_database
 	}
 
 	/* @brief 重命名规则
-	   @param $rule_name      规则的名字
+	   @param $rid		      规则的ID
 	   @param $rule_name_new  规则的新名字 */
 	public function rename_rule(
-		$rule_name, $rule_name_new, $uid = -1)
+		$rid, $rule_name_new, $uid = -1)
 	{
 		$uid = intval($uid, 10);
 		if($uid == -1) $uid = $this->uid;
-		if(!$this->check_uid($uid)) 
-			return SCAN_WX_STATUS_FORBIDDEN;
-		$rule = $this->get_rule_info($rule_name, $uid);
-		if($rule === false)
-			return SCAN_WX_STATUS_RULE_NOT_EXIST;
-
-		if($this->get_rule_info($rule_name_new, $uid) !== false)
-			return SCAN_WX_STATUS_RULE_EXIST;
+		$rid = intval($rid, 10);
+		$ret = $this->basic_check($rid, $uid);
+		if($ret !== true)
+			return $ret;
 
 		$rule_name_new = $this->escape_sql_string($rule_name_new);
-		$rid = $rule['id'];
 		$this->query("UPDATE `reply_map`
 				      SET `rule_name` = '$rule_name_new'
 					  WHERE `id` = $rid");
 		return SCAN_WX_STATUS_SUCCESS;
 	}
 
+	private function basic_check($rid, $uid)
+	{
+		$uid = intval($uid, 10);
+		if(!$this->check_uid($uid)) 
+			return SCAN_WX_STATUS_FORBIDDEN;
+		$rid = intval($rid, 10);
+		$rule_owner = $this->get_rule_owner($rid);
+		if($rule_owner === false)
+			return SCAN_WX_STATUS_RULE_NOT_EXIST;
+		if($rule_owner != $uid) 
+			return SCAN_WX_STATUS_FORBIDDEN;
+
+		return true;
+	}
+	
+	/* @brief 修改文本回复的时间
+	   @param $rid		  规则的ID
+	   @param $time_old   时间串 
+	   @param $time_new   时间串 */
+	public function update_text_reply_time(
+		$rid, $time_old, $time_new, $uid = -1)
+	{
+		$time = trim($time);
+		$uid = intval($uid, 10);
+		if($uid == -1) $uid = $this->uid;
+		$rid = intval($rid, 10);
+		$ret = $this->basic_check($rid, $uid);
+		if($ret !== true)
+			return $ret;
+
+		$time_str = $this->get_result(
+			"SELECT `reply_value`
+			 FROM `reply_meta`
+			 WHERE `reply_key` = 'time_range'
+			   AND `id` = $rid");
+		$pos = strpos($time_str, $time_old);
+		if($pos === false)
+			return SCAN_WX_STATUS_RULE_NOT_EXIST;
+		if(strpos($time_str, $time_new) !== false)
+			return SCAN_WX_STATUS_RULE_EXIST;
+
+		$time_str = substr_replace($time_str, $time_new, $pos, strlen($time_old));
+		$this->update_meta($this->get_meta_id($rid, 'time_range'), $time_str, $uid);
+		return SCAN_WX_STATUS_SUCCESS;
+	}
+	
+	/* @brief 删除文本回复的时间
+	   @param $rid		  规则的ID
+	   @param $time_str   时间串  */
+	public function remove_text_reply_time(
+		$rid, $time, $uid = -1)
+	{
+		$time = trim($time);
+		$uid = intval($uid, 10);
+		if($uid == -1) $uid = $this->uid;
+		$rid = intval($rid, 10);
+		$ret = $this->basic_check($rid, $uid);
+		if($ret !== true)
+			return $ret;
+
+		$time_str = $this->get_result(
+			"SELECT `reply_value`
+			 FROM `reply_meta`
+			 WHERE `reply_key` = 'time_range'
+			   AND `id` = $rid");
+		$pos = strpos($time_str, $time);
+		if($pos === false)
+			return SCAN_WX_STATUS_RULE_NOT_EXIST;
+
+		$time_str = substr_replace($time_str, "", $pos, strlen($time));
+
+		$pos2 = strpos($time_str, "||");
+		if($pos2 !== false)
+			$time_str = substr_replace($time_str, "|", $pos2, 2);
+		$time_str = trim($time_str, "|");
+		$this->update_meta($this->get_meta_id($rid, 'time_range'), $time_str, $uid);
+		return SCAN_WX_STATUS_SUCCESS;
+	}
+
+	/* @brief 添加文本回复的时间
+	   @param $rid		  规则的ID
+	   @param $time       时间串 */
+	public function add_text_reply_time($rid, $time, $uid = -1)
+	{
+		$time = trim($time);
+		$uid = intval($uid, 10);
+		if($uid == -1) $uid = $this->uid;
+		$rid = intval($rid, 10);
+		$ret = $this->basic_check($rid, $uid);
+		if($ret !== true)
+			return $ret;
+
+		$time_str = $this->get_result(
+			"SELECT `reply_value`
+			 FROM `reply_meta`
+			 WHERE `reply_key` = 'time_range'
+			   AND `id` = $rid");
+		if(strpos($time_str, $time) !== false)
+			return SCAN_WX_STATUS_RULE_EXIST;
+		if($time_str != '')
+			$time_str .= '|' . $time;
+		else $time_str = $time;
+		$time_str = trim($time_str, "|");
+		$this->update_meta($this->get_meta_id($rid, 'time_range'), $time_str, $uid);
+		return SCAN_WX_STATUS_SUCCESS;
+	}
+
 	/* @brief 设置文本回复的时间
-	   @param $rule_name  规则的名字，用于索引 
+	   @param $rid		  规则的ID
 	   @param $time_type  时间类型 
-	   @param $time       时间数组（某一点到指定时刻的秒数） */
+	   @param $time       时间串 */
 	public function set_text_reply_time(
-		$rule_name, $time_type, $time, $uid = -1)
+		$rid, $time_type, $time, $uid = -1)
 	{
 		$uid = intval($uid, 10);
 		if($uid == -1) $uid = $this->uid;
-		if(!$this->check_uid($uid)) 
-			return SCAN_WX_STATUS_FORBIDDEN;
-		$rule = $this->get_rule_info($rule_name, $uid);
-		if($rule === false)
-			return SCAN_WX_STATUS_RULE_NOT_EXIST;
+		$rid = intval($rid, 10);
+		$ret = $this->basic_check($rid, $uid);
+		if($ret !== true)
+			return $ret;
 
-		$rid = $rule['id'];
+		$range_id = $this->get_meta_id($rid, 'time_range');
 		switch($time_type)
 		{
 		case SCAN_WX_TIME_ALL:
-			$this->remove_meta($this->get_meta_id($rid, 'time_range'));
-			$this->update_meta($this->get_meta_id($rid, 'time_type'), SCAN_WX_TIME_ALL);
+			if($range_id)
+				$this->remove_meta($this->get_meta_id($rid, 'time_range'), $uid);
+			$this->update_meta($this->get_meta_id($rid, 'time_type'), SCAN_WX_TIME_ALL, $uid);
 			break;
 		default:
-			$this->update_meta($this->get_meta_id($rid, 'time_type'), $time_type);
-			$this->update_meta($this->get_meta_id($rid, 'time_range'),
-				scan_array_to_time($time_type, $time));
+			$this->update_meta($this->get_meta_id($rid, 'time_type'), $time_type, $uid);
+			if($range_id)
+				$this->update_meta($this->get_meta_id($rid, 'time_range'), $time, $uid);
+			else $this->insert_meta($rid, 'time_range', $time, $uid);
 			break;
 		}
 
@@ -200,18 +303,16 @@ class scan_wx_database
 	}
 
 	/* @brief 删除一条文本自动回复
-	   @param $rule_name  规则的名字，用于索引 */
-	public function remove_text_reply($rule_name, $uid = -1)
+	   @param $rid		      规则的ID */
+	public function remove_text_reply($rid, $uid = -1)
 	{
 		$uid = intval($uid, 10);
 		if($uid == -1) $uid = $this->uid;
-		if(!$this->check_uid($uid)) 
-			return SCAN_WX_STATUS_FORBIDDEN;
-		$rule = $this->get_rule_info($rule_name, $uid);
-		if($rule === false)
-			return SCAN_WX_STATUS_RULE_NOT_EXIST;
+		$rid = intval($rid, 10);
+		$ret = $this->basic_check($rid, $uid);
+		if($ret !== true)
+			return $ret;
 
-		$rid = $rule['id'];
 		$this->query("DELETE FROM `reply_meta` WHERE `id` = $rid");
 		$this->query("DELETE FROM `reply_map` WHERE `id` = $rid");
 		return SCAN_WX_STATUS_SUCCESS;
@@ -263,21 +364,23 @@ class scan_wx_database
 	}
 
 	/* @brief 插入一条文本自动回复内容或关键字
-	   @param $rule_name  规则的名字，用于索引 
+	   @param $rid 		  规则ID 
 	   @param $keyword    要插入的关键数组
 	   @param $content    要插入回复数组 */
 	public function insert_text_reply_content(
-		$rule_name, $keyword, $content, $uid = -1)
+		$rid, $keyword, $content, $uid = -1)
 	{
 		$uid = intval($uid, 10);
 		if($uid == -1) $uid = $this->uid;
 		if(!$this->check_uid($uid)) 
 			return SCAN_WX_STATUS_FORBIDDEN;
-		$rule = $this->get_rule_info($rule_name, $uid);
-		if($rule === false)
+		$rid = intval($rid, 10);
+		$rule_owner = $this->get_rule_owner($rid);
+		if($rule_owner === false)
 			return SCAN_WX_STATUS_RULE_NOT_EXIST;
+		if($rule_owner != $uid) 
+			return SCAN_WX_STATUS_FORBIDDEN;
 
-		$rid = $rule['id'];
 		foreach($keyword as $k)
 			$this->insert_meta($rid, 'keyword', $k, $uid);
 		foreach($content as $v)
@@ -287,24 +390,32 @@ class scan_wx_database
 	}
 
 	/* @brief 获取一条规则
-	   @param $rule_name  规则的名字，用于索引 */
-	public function get_text_reply($rule_name, $uid = -1)
+	   @param $rid  规则ID */
+	public function get_text_reply($rid, $uid = -1)
 	{
 		$uid = intval($uid, 10);
 		if($uid == -1) $uid = $this->uid;
 		if(!$this->check_uid($uid)) 
 			return SCAN_WX_STATUS_FORBIDDEN;
-		$rule = $this->get_rule_info($rule_name, $uid);
-		if($rule === false)
+		$rid = intval($rid, 10);
+		$rule_owner = $this->get_rule_owner($rid);
+		if($rule_owner === false)
 			return SCAN_WX_STATUS_RULE_NOT_EXIST;
-		$rid = $rule['id'];
+		if($rule_owner != $uid) 
+			return SCAN_WX_STATUS_FORBIDDEN;
+
 		$sql = "SELECT m.reply_key, m.reply_value, m.index_key
 			    FROM `reply_meta` AS m
 				INNER JOIN `reply_map` AS r
 				ON r.id = m.id
 				WHERE m.id = $rid";
+		$rinfo = $this->get_rule_info_by_rid($rid);
 		$ret = array();
-		$ret['match_type'] = $rule['type'];
+		$ret['rid'] = $rid;
+		$ret['rule_name'] = $rinfo['rule_name'];
+		$ret['match_type'] = $rinfo['type'];
+		$ret['keyword'] = array();
+		$ret['reply'] = array();
 		$result = $this->query($sql);
 		while($row = $result->fetch_row())
 		{
@@ -319,8 +430,6 @@ class scan_wx_database
 				$time_type = $value;
 				break;
 			case 'keyword': case 'reply':
-				if(!array_key_exists($key, $ret))
-					$ret[$key] = array();
 				// $meta_id, $value
 				array_push($ret[$key], array($row[2], $value));
 				break;
@@ -350,12 +459,16 @@ class scan_wx_database
 				WHERE `uid` = $uid";
 		$result = $this->query($sql);
 		$ret = array();
+		$count = 0;
 		while($row = $result->fetch_array())
 		{
 			array_push($ret, array(
+				'rid'  => $row['id'], 
 				'type' => $row['type'], 
 				'name' => $row['rule_name']));
+			++$count;
 		}
+		$ret['count'] = $count;
 		$result->free();
 		return $ret;
 	}
@@ -441,6 +554,16 @@ class scan_wx_database
 			 INNER JOIN reply_meta AS m
 			 ON m.id = r.id 
 			 AND m.index_key = $index");
+	}
+
+	/* @brief 获得规则的信息
+	   @param $rid 规则的ID */
+	private function get_rule_info_by_rid($rid)
+	{
+		$rid = intval($rid, 10);
+		return $this->get_first_row(
+			"SELECT * FROM `reply_map`
+			 WHERE `id` = $rid");
 	}
 
 	/* @brief 获得规则的信息

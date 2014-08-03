@@ -1,0 +1,22 @@
+#power_by {
+	position: absolute;
+	right: 3px;
+	bottom: 3px;
+	font-size: 11px;
+}
+
+body {
+	font-size: 14px;
+	color: #222;
+	font-family: "WenQuanYi Zen Hei", "Helvetica Neue", "Hiragino Sans GB",
+		"Microsoft YaHei", "微软雅黑", "黑体", Arial, sans-serif;
+}
+
+ul, ol {
+	list-style-type: none;
+	padding-left: 0px;
+}
+
+a {
+	outline: none;
+}
