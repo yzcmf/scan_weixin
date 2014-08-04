@@ -24,11 +24,11 @@ define('SCAN_WX_SESSION_KEEP_TIME', 600);
 
 // 返回状态
 define('SCAN_WX_STATUS_SUCCESS', 'success');
-define('SCAN_WX_STATUS_ERROR', 'error');
-define('SCAN_WX_STATUS_NOLOGIN', 'nologin');
-define('SCAN_WX_STATUS_FORBIDDEN', 'forbidden');
-define('SCAN_WX_STATUS_RULE_NOT_EXIST', 'rule not exist');
-define('SCAN_WX_STATUS_RULE_EXIST', 'rule exist');
+define('SCAN_WX_STATUS_ERROR', '错误！');
+define('SCAN_WX_STATUS_NOLOGIN', '请先登陆');
+define('SCAN_WX_STATUS_FORBIDDEN', '权限不够');
+define('SCAN_WX_STATUS_RULE_NOT_EXIST', '规则或者内容不存在');
+define('SCAN_WX_STATUS_RULE_EXIST', '规则或者内容已经存在');
 
 // 自动回复时间类型
 define('SCAN_WX_TIME_DAILY', 'daily');

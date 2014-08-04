@@ -50,6 +50,7 @@ function wx_register()
 		scan_error_exit(SCAN_WX_STATUS_ERROR);
 
 	$username = $wx->escape_sql_string($_POST['username']);
+	$username = trim($username);
 	$password = sha1($_POST['password'] . SCAN_WX_PASSWORD_SALT);
 
 	$row = $wx->get_first_row("SELECT * FROM `user` WHERE `username` = '$username'");

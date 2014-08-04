@@ -17,25 +17,33 @@ switch($action)
 /* action = 'insert'
  * @brief 插入文本自动回复规则
  * @param rule_name 文本自动回复规则的名字
- * @param keyword   关键字数组
- * @param reply     回复内容数组
+ * @param keyword   关键字数组[opt]
+ * @param reply     回复内容数组[opt]
  * @param match_require 匹配次数需要[opt]
  * @param match_type 匹配类型（full_match, sub_match, fallback） */
 case 'insert':
-	if(!isset($_POST['rule_name']) || 
-	   !isset($_POST['keyword']) ||
-	   !isset($_POST['reply']))
+	if(!isset($_POST['rule_name']))
 		scan_error_exit(SCAN_WX_STATUS_ERROR);
 	if(isset($_POST['match_require']))
 		$match_require = intval($_POST['match_require'], 10);
 	else $match_require = 1;
+
+	if(!isset($_POST['keyword']))
+		$keyword = array();
+	else $keyword = $_POST['keyword'];
+
+	if(!isset($_POST['reply']))
+		$reply = array();
+	else $reply = $_POST['reply'];
+
 	if(!isset($_POST['match_type']))
 		$match_type = 'sub_match';
 	else $match_type = $_POST['match_type'];
+
 	$ret = $wx->insert_text_reply(
 		$_POST['rule_name'], 
-		$_POST['keyword'], 
-		$_POST['reply'], 
+		$keyword, 
+		$reply,
 		$match_require, 
 		$match_type, 
 		$uid);

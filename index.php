@@ -1,3 +1,3 @@
 <?php
-header("Location: client/index.php");
+header("Location: client/login.php");
 ?>

@@ -118,4 +118,47 @@ function scan_wx_check_time($rule_id)
 	return false;
 }
 
+function scan_wx_check_time_available_sub($time, $reach_zero, $limit)
+{
+	$time_arr = explode(':', $time);
+	if(count($time_arr) != count($limit))
+		return false;
+	if(!$reach_zero && intval($time_arr[0], 10) == 0)
+		return false;
+	for($i = 0; $i != count($limit); ++$i)
+		if(intval($time_arr[$i], 10) > $limit[$i])
+			return false;
+	return true;
+}
+
+function scan_wx_check_time_available($time_type, $time_str)
+{
+	$time_str = trim($time_str);
+	if($time_str == '')
+		return true;
+	if($time_type == SCAN_WX_TIME_ALL)
+		return false;
+	$reach_zero = true;
+	if($time_type == SCAN_WX_TIME_DAILY)
+		$limit = array( 24, 60, 60 );
+	elseif($time_type == SCAN_WX_TIME_WEEKLY)
+		$limit = array( 6, 24, 60, 60 );
+	else {
+		$limit = array( 31, 24, 60, 60 );
+		$reach_zero = false;
+	}
+
+	$arr = explode('|', $time_str);
+	foreach($arr as $t)
+	{
+		$a = explode(',', $t);
+		if(count($a) != 2) return false;
+		if(!scan_wx_check_time_available_sub($a[0], $reach_zero, $limit))
+			return false;
+		if(!scan_wx_check_time_available_sub($a[1], $reach_zero, $limit))
+			return false;
+	}
+	return true;
+}
+
 ?>

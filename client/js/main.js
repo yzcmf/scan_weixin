@@ -12,3 +12,17 @@ $(document).ready( function() {
 	$(window).scroll(scroll_event);
 	$(window).resize(scroll_event);
 } );
+
+$(document).ready( function() {
+	// 设置 jsbtn 样式
+	$(".jsbtn").addClass("jsbtn_leave");
+	$(".jsbtn").mouseenter( function() {
+		$(this).removeClass("jsbtn_leave");
+		$(this).addClass("jsbtn_stay");
+	} );
+
+	$(".jsbtn").mouseleave( function() {
+		$(this).addClass("jsbtn_leave");
+		$(this).removeClass("jsbtn_stay");
+	} );
+} );

@@ -192,6 +192,14 @@ class scan_wx_database
 		if($ret !== true)
 			return $ret;
 
+		$type = $this->get_reply_time_type($rid, $uid);
+		$time_old = $this->escape_sql_string(trim($time_old));
+		if(scan_wx_check_time_available($type, $time_old) == false)
+			return SCAN_WX_STATUS_ERROR;
+		$time_new = $this->escape_sql_string(trim($time_new));
+		if(scan_wx_check_time_available($type, $time_new) == false)
+			return SCAN_WX_STATUS_ERROR;
+
 		$time_str = $this->get_result(
 			"SELECT `reply_value`
 			 FROM `reply_meta`
@@ -221,6 +229,11 @@ class scan_wx_database
 		$ret = $this->basic_check($rid, $uid);
 		if($ret !== true)
 			return $ret;
+
+		$type = $this->get_reply_time_type($rid, $uid);
+		$time = $this->escape_sql_string(trim($time));
+		if(scan_wx_check_time_available($type, $time) == false)
+			return SCAN_WX_STATUS_ERROR;
 
 		$time_str = $this->get_result(
 			"SELECT `reply_value`
@@ -254,6 +267,11 @@ class scan_wx_database
 		if($ret !== true)
 			return $ret;
 
+		$type = $this->get_reply_time_type($rid, $uid);
+		$time = $this->escape_sql_string(trim($time));
+		if(scan_wx_check_time_available($type, $time) == false)
+			return SCAN_WX_STATUS_ERROR;
+
 		$time_str = $this->get_result(
 			"SELECT `reply_value`
 			 FROM `reply_meta`
@@ -282,6 +300,11 @@ class scan_wx_database
 		$ret = $this->basic_check($rid, $uid);
 		if($ret !== true)
 			return $ret;
+
+		$type = $this->get_reply_time_type($rid, $uid);
+		$time = $this->escape_sql_string(trim($time));
+		if(scan_wx_check_time_available($type, $time) == false)
+			return SCAN_WX_STATUS_ERROR;
 
 		$range_id = $this->get_meta_id($rid, 'time_range');
 		switch($time_type)
@@ -576,6 +599,19 @@ class scan_wx_database
 		$rule_name = $this->escape_sql_string($rule_name);
 		return $this->get_first_row("SELECT * FROM `reply_map`
 			    WHERE `uid` = $uid AND `rule_name` = '$rule_name'");
+	}
+
+	/* @brief 获得回复时间类型
+	   @param $rid */
+	private function get_reply_time_type($rid, $uid)
+	{
+		$uid = intval($uid, 10);
+		if($uid == -1) $uid = $this->uid;
+		if(!$this->check_uid($uid)) return false;
+		$rid = intval($rid, 10);
+		return $this->get_result(
+			"SELECT `reply_value` FROM `reply_meta`
+			 WHERE `id` = $rid AND `reply_key` = 'time_type'");
 	}
 
 	/* @brief 查询数据库并获得第一格内容 */

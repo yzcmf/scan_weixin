@@ -1,9 +1,74 @@
+var flush_count = 0;
 $(document).ready( function() {
-	check_login("login.php");
+	$.getJSON("../account.php?action=get_user_info", 
+		function(data) {
+			if(data.status != SCAN_WX_STATUS_SUCCESS)
+				window.open("index.php", "_self");
+			if(data.role == "administrator")
+			{
+				$("#register_user").show();
+				$("#register_user").click( function() {
+					var elem = $(".register_user_dialog").clone(true);
+					confirm_dialog("auto", "添加用户", elem, function() {
+						return event_register_user(elem);
+					} );
+				} );
+			}
+		} );
+
+	$("#rule_logout").click( function() {
+		$.getJSON("../account.php?action=logout",
+			{}, function(data) {
+				window.open("login.php", "_self");
+			} );
+	} );
+
+	$("#rule_add").click( function() {
+		var elem = $(".add_dialog").clone(true);
+		var rule_num = $(".rule_wrap_item").length;
+		var dlg_name = elem.children(".dlg_rule_name");
+		dlg_name.val(dlg_name.val() + (rule_num + 1))
+		confirm_dialog("auto", "添加规则", elem, function() {
+			return event_add_rule(elem, rule_num + 1);
+		} );
+	} );
+	
+	$("#change_passwd").click( function() {
+		var elem = $(".change_passwd_dialog").clone(true);
+		confirm_dialog("auto", "修改密码", elem, function() {
+			return event_change_passwd(elem);
+		} );
+	} );
+
+	$("#flush_rule").data("running", false);
+	$("#flush_rule").click( function() {
+		if($(this).data("running"))
+			return;
+		$(this).data("running", true);
+		var rtemp;
+		$.getJSON("../text_reply_oper.php?action=get_all_rules", 
+			function(rules) {
+				++flush_count;
+				if(!check_status(rules.status))
+					return;
+				if(flush_count % 2 == 0)
+					reflush_rule(rules, $("#rule_wrap"));
+				else rtemp = rules;
+			} );
+		$("#rule_wrap").fadeOut( function() {
+			$(this).empty();
+			$(this).fadeIn();
+			if(++flush_count % 2 == 0)
+				reflush_rule(rtemp, $("#rule_wrap"));
+		} );
+	} );
+
 	$.getJSON("../text_reply_oper.php?action=get_all_rules", 
 		function(rules) {
 			if(!check_status(rules['status']))
 				return;
+
+			$("#rule_tool").fadeIn();
 
 			$(".lw").keypress( function(e) {
 				if(!e.which || e.which == 8) return true;
@@ -13,52 +78,61 @@ $(document).ready( function() {
 			} );
 
 			$("#waiting_msg").remove();
-			var rules_list = $("<ul></ul>");
-			rules_list.attr("id", "rules_list");
-			for(var i = 0; i != rules.count; ++i)
-			{
-				var wrap = $("<li></li>");
-				wrap.data("rid", rules[i].rid);
-				wrap.data("modify_mode", false);
-				wrap.addClass("rule_wrap_item");
-
-				create_rule_head(wrap, i + 1, rules[i]);
-				$.post("../text_reply_oper.php?action=get_rule_info", 
-					{ rid : rules[i].rid },
-					function(wrap) {
-						return function(rule) {
-							wrap.children(".rule_head").click( function() {
-								var rule_body = wrap.children(".rule_body");
-								var rule_modify = wrap.children(".rule_modify");
-								if(wrap.data("modify_mode"))
-								{
-									var icon = wrap.find("a.icon_drop_up");
-									icon.removeClass("icon_drop_up");
-									icon.addClass("icon_drop_down");
-									rule_body.slideDown();
-									rule_modify.slideUp();
-									wrap.data("modify_mode", false);
-								} else {
-									var icon = wrap.find(".icon_drop_down");
-									icon.removeClass("icon_drop_down");
-									icon.addClass("icon_drop_up");
-									rule_body.slideUp();
-									rule_modify.slideDown();
-									wrap.data("modify_mode", true);
-								}
-							} );
-							create_rule_body(wrap, rule);
-							create_rule_modify(wrap, rule);
-						};
-					}(wrap), "json");
-				wrap.appendTo(rules_list);
-			}
-				
-			rules_list.hide();
-			rules_list.fadeIn();
-			rules_list.appendTo($("#rule_wrap"));
+			reflush_rule(rules, $("#rule_wrap"));
 		} );
 } );
+
+function reflush_rule(rules, wrap)
+{
+	var rules_list = $("<ul></ul>");
+	rules_list.attr("id", "rules_list");
+	for(var i = rules.count - 1; i >= 0; --i)
+		create_single_rule(i + 1, rules[i]).appendTo(rules_list);
+		
+	rules_list.hide();
+	rules_list.fadeIn();
+	rules_list.appendTo(wrap);
+	$("#flush_rule").data("running", false);
+}
+
+function create_single_rule(rule_num, rule_info)
+{
+	var wrap = $("<li></li>");
+	wrap.data("rid", rule_info.rid);
+	wrap.data("modify_mode", false);
+	wrap.addClass("rule_wrap_item");
+
+	create_rule_head(wrap, rule_num, rule_info);
+	$.post("../text_reply_oper.php?action=get_rule_info", 
+		{ rid : rule_info.rid },
+		function(wrap) {
+			return function(rule) {
+				wrap.children(".rule_head").click( function() {
+					var rule_body = wrap.children(".rule_body");
+					var rule_modify = wrap.children(".rule_modify");
+					if(wrap.data("modify_mode"))
+					{
+						var icon = wrap.find("a.icon_drop_up");
+						icon.removeClass("icon_drop_up");
+						icon.addClass("icon_drop_down");
+						rule_body.slideDown();
+						rule_modify.slideUp();
+						wrap.data("modify_mode", false);
+					} else {
+						var icon = wrap.find(".icon_drop_down");
+						icon.removeClass("icon_drop_down");
+						icon.addClass("icon_drop_up");
+						rule_body.slideUp();
+						rule_modify.slideDown();
+						wrap.data("modify_mode", true);
+					}
+				} );
+				create_rule_body(wrap, rule);
+				create_rule_modify(wrap, rule);
+			};
+		}(wrap), "json");
+	return wrap;
+}
 
 function find_wrap(elem)
 {
@@ -73,6 +147,14 @@ function check_ul_border(body)
 	if(ul.children("li").length == 0)
 		body.css("border-bottom", "0px");
 	else body.css("border-bottom", "");
+
+	if(body.hasClass("head_check"))
+	{
+		body.css("border-bottom", "0px");
+		if(ul.children("li").length == 0)
+			body.prev().css("border-bottom", "0px");
+		else body.prev().css("border-bottom", "");
+	}
 }
 
 function create_rule_head(wrap, num, rule)
@@ -170,6 +252,7 @@ function create_rule_modify(wrap, rule)
 	rule_name_wrap.addClass("rule_head_meta");
 	rule_name_wrap.data("rid", rule.rid);
 	var rule_name_area = $("<div></div>");
+	rule_name_area.css("float", "left");
 
 	$("<label></label>")
 		.addClass("rule_modify_detail")
@@ -183,6 +266,17 @@ function create_rule_modify(wrap, rule)
 
 	rule_name_area.append(rule_name_input);
 	rule_name_wrap.append(rule_name_area);
+
+	// 添加删除规则按钮
+	var rule_remove= $("<div></div>");
+	rule_remove.addClass("oper");
+	var rule_remove_link = $("<a></a>");
+	rule_remove_link.attr("href", "javascript:;");
+	rule_remove_link.text("删除规则");
+	rule_remove_link.click(event_remove_rule(rule.rid, wrap));
+	rule_remove.append(rule_remove_link);
+	rule_name_wrap.append(rule_remove);
+
 	rule_modify.append(rule_name_wrap);
 
 	// 回复时间类型
@@ -198,6 +292,8 @@ function create_rule_modify(wrap, rule)
 	// 回复区域
 	create_rule_modify_content(rule_modify, 
 		rule.reply, 'reply', "回复");
+	rule_modify.children().last().addClass("head_check");
+	check_ul_border(rule_modify.children().last());
 
 	wrap.append(rule_modify);
 }
@@ -302,8 +398,8 @@ function create_rule_modify_content(wrap, content, type, title)
 		create_single_item(content[i], title).appendTo(list);
 
 	list.children("li").last().css("border-bottom", "0px");
-
 	body.append(list);
+	check_ul_border(body);
 	wrap.append(body);
 }
 
@@ -436,26 +532,8 @@ function event_modify_content(content, title)
 	return function() {
 		var elem = $(".modify_dialog").clone();
 		elem.children("textarea").val(content.data("raw_content"));
-		$.dialog( {
-			lock: true,
-			esc: false,
-			width: 500,
-			padding: "30px 40px",
-			title: "修改" + title,
-			content: elem.get(0),
-			btn: {
-				ok: {
-					val: "确定",
-					type: "green",
-					click: function() {
-						return event_modify_content_solve(
-							content, elem, title);
-					}
-				}, 
-				cancel: {
-					val: "取消"
-				}
-			}
+		confirm_dialog(500, "修改" + title, elem, function() {
+			return event_modify_content_solve(content, elem, title);
 		} );
 	};
 }
@@ -549,6 +627,7 @@ function event_insert_content_solve(body, elem, type, title)
 						it.appendTo(ul);
 						ul.children("li").last()
 							.css("border-bottom", "0px");
+						check_ul_border(body);
 					}
 				}, "json" );
 		}, "json");
@@ -760,6 +839,106 @@ function event_add_time(body)
 			return event_add_time_solve(body, elem, time_type);
 		} );
 	};
+}
+
+function event_change_passwd(elem)
+{
+	var old_passwd = elem.children(".passwd_old").val();
+	var new_passwd = elem.children(".passwd_new").val();
+	var rep_passwd = elem.children(".passwd_new_rep").val();
+	if(new_passwd != rep_passwd)
+	{
+		scan_alert("错误", "两次输入的密码不相同");
+		return false;
+	}
+
+	$.post("../account.php?action=change_password", 
+		{ old_password : $.md5(old_passwd), 
+		  new_password : $.md5(new_passwd) }, 
+		function(data) {
+			if(data.status != SCAN_WX_STATUS_SUCCESS)
+				scan_alert("错误", "修改失败");
+			scan_alert("通知", "密码修改成功");
+		}, "json");
+	return true;
+}
+
+function event_remove_rule(rid, wrap)
+{
+	return function() {
+		scan_confirm("删除后不可恢复<br />真的要删除规则吗？",  
+			function() {
+				$.post("../text_reply_oper.php?action=remove",  
+					{ rid : rid }, function(data) {
+						if(!check_status(data.status))
+							return;
+						wrap.fadeOut( function() {
+							$(this).remove();
+						} );
+					} );
+				return true;
+			} );
+	};
+}
+
+function event_add_rule(elem, rule_num)
+{
+	var rule_name = elem.children(".dlg_rule_name").val();
+	if(rule_name == "")
+	{
+		scan_alert("错误", "规则名称不能为空");
+		return false;
+	}
+
+	$.post("../text_reply_oper.php?action=insert", 
+		{ rule_name : rule_name, 
+		  match_type : elem.children(".dlg_match_type").val() }, 
+		function(data) {
+			if(!check_status(data.status))
+				return;
+			$.getJSON("../text_reply_oper.php?action=get_all_rules", 
+				function(rules) {
+					if(!check_status(rules.status))
+						return;
+
+					// 查找新添加规则的 rid
+					var rid_pos = 0;
+					var current_rid = 0;
+					for(var i = 0; i != rules.count; ++i)
+					{
+						if(parseInt(rules[i].rid) > current_rid)
+						{
+							current_rid = parseInt(rules[i].rid);
+							rid_pos = i;
+						}
+					}
+
+					create_single_rule(rules.count, 
+						rules[rid_pos]).prependTo($("#rules_list"));
+				} );
+		}, "json");
+	return true;
+}
+
+function event_register_user(elem)
+{
+	var username = elem.children(".dlg_user_name").val();
+	if(username.replace(/\s/g, "") == "")
+	{
+		scan_alert("错误", "用户名不能为空");
+		return false;
+	}
+
+	var password = elem.children(".dlg_password").val();
+	$.post("../account.php?action=register", 
+		{ username : username, password : $.md5(password) }, 
+		function(data) {
+			if(!check_status(data.status))
+				return;
+			scan_alert("通知", "添加用户成功");
+		}, "json");
+
+	return true;
 }
 
 function confirm_dialog(width, title, elem, callback)

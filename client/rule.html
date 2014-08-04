@@ -3,19 +3,52 @@
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 		<script type="text/javascript" src="js/jquery-1.8.3.min.js"></script>
+		<script type="text/javascript" src="js/jquery.md5.js"></script>
 		<script type="text/javascript" src="js/jquery.iDialog.min.js" dialog-theme="default"></script>
 		<script type="text/javascript" src="js/function.js"></script>
 		<script type="text/javascript" src="js/main.js"></script>
 		<script type="text/javascript" src="js/rule.js"></script>
 		<link rel="stylesheet" href="css/style.css" />
 		<link rel="stylesheet" href="css/rule.css" />
+		<title>SCAN 微信平台管理系统</title>
 	</head>
 	<body>
 		<div id="waiting_msg">Please waiting...</div>
 		<!-- real content -->
+		<div id="rule_tool" style="display: none">
+			<input type="button" class="jsbtn" id="rule_add" value="添加新规则" />
+			<input type="button" class="jsbtn" id="flush_rule" value="刷新" />
+			<input type="button" class="jsbtn" id="change_passwd" value="修改密码" />
+			<input type="button" class="jsbtn" id="register_user" style="display: none" value="添加用户" />
+			<input type="button" class="jsbtn" id="rule_logout" value="退出登陆" />
+		</div>
 		<div id="rule_wrap"></div>
 		<!-- template -->
 		<div id="unshown_wrap" style="display: none">
+			<div class="register_user_dialog dialog_two">
+				<span>用户名</span>
+				<input type="text" class="dlg_user_name" /> <br />
+				<span>密码</span>
+				<input type="password" class="dlg_password" />
+			</div>
+			<div class="change_passwd_dialog dialog_two">
+				<span>旧密码</span>
+				<input type="password" class="passwd_old" /> <br />
+				<span>新密码</span>
+				<input type="password" class="passwd_new"/> <br />
+				<span>重复新密码</span>
+				<input type="password" class="passwd_new_rep" />
+			</div>
+			<div class="add_dialog dialog_two">
+				<span>规则名称</span>
+				<input type="text" class="dlg_rule_name" value="New rule " /> <br />
+				<span>匹配类型</span>
+				<select class="dlg_match_type">
+					<option value="sub_match">部分匹配</option>
+					<option value="full_match">完全匹配</option>
+					<option value="fallback">fallback</option>
+				</select>
+			</div>
 			<div class="modify_dialog">
 				<textarea></textarea>
 			</div>

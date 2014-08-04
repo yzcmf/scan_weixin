@@ -94,7 +94,6 @@
 
 .rule_modify a:hover {
 	text-decoration: underline;
-	color: #ffac00;
 }
 
 .rule_modify_item_body {
@@ -166,21 +165,24 @@
 	resize: none;
 }
 
-.jsbtn {
-	min-width: 60px;
-	display: inline-block;
-	overflow: visible;
-	padding: 0px 22px;
-	height: 30px;
-	line-height: 30px;
-	vertical-align: middle;
-	text-align: center;
-	text-decoration: none;
-	font-size: 14px;
-	cursor: pointer;
-	border-radius: 4px;
-}
-
 .lw {
 	width: 40px;
+}
+
+.change_passwd_dialog span {
+	display: inline-block;
+	width: 70px;
+}
+
+.register_user_dialog span {
+	display: inline-block;
+	width: 50px;
+}
+
+.dialog_two input {
+	width: 150px;
+}
+
+.dialog_two select {
+	width: 150px;
 }

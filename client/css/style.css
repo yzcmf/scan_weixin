@@ -20,3 +20,35 @@ ul, ol {
 a {
 	outline: none;
 }
+
+.jsbtn {
+	height: 30px;
+	line-height: 30px;
+	min-width: 125px;
+	padding: 0px 22px;
+
+	border: 0px;
+	border-radius: 4px;
+	outline: 0px;
+	font-size: 14px;
+
+	overflow: visible;
+	display: inline-block;
+	text-align: center;
+	text-decoration: none;
+	vertical-align: middle;
+
+	cursor: pointer;
+}
+
+.jsbtn_leave {
+	background-color: #44b550;
+	border: #44b550;
+	color: #fff;
+}
+
+.jsbtn_stay {
+	background-color: #33a550;
+	border: #33a550;
+	color: #fff;
+}

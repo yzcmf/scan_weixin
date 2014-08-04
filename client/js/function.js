@@ -51,15 +51,6 @@ function check_status(status)
 	return false;
 }
 
-function check_login(failed_to)
-{
-	$.getJSON("../account.php?action=get_user_info", 
-		function(data) {
-			if(data['status'] == SCAN_WX_STATUS_NOLOGIN)
-				window.open(failed_to, "_self");
-		} );
-}
-
 function map_reply_type(type)
 {
 	switch(type)

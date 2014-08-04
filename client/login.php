@@ -16,33 +16,38 @@
 		<script type="text/javascript" src="js/function.js"></script>
 		<script type="text/javascript" src="js/main.js"></script>
 		<link rel="stylesheet" href="css/style.css" />
+		<title>SCAN 微信平台管理系统</title>
 	</head>
 	<body>
-		<form id="login_form">
+		<div id="login_form">
 			<table border="0">
 				<tr><td><label for="username">Username: </label></td>
 				<td><input type="text" name="username" id="login_username" /></td></tr>
 				<tr><td><label for="login_password">Password: </label></td>
 				<td><input type="password" id="login_password" /></td></tr>
 			</table>
-			<input type="hidden" name="password" id="login_md5" />
-			<input type="submit" id="login_submit" value="Login" />
-		</form>
+			<input type="button" id="login_submit" class="jsbtn" value="登陆" />
+		</div>
 		<script type="text/javascript">
-$("#login_form").submit( function() {
+$("#login_submit").click( function() {
 	$("#login_submit").attr("disabled", true);
-	var passwd = $.md5($("#login_password").val());
-	$("#login_md5").val(passwd);
-	$.post("../account.php?action=login", $("#login_form").serialize(), 
+	$.post("../account.php?action=login", 
+		{ username : $("#login_username").val(), 
+		  password : $.md5($("#login_password").val()) },
 		function(ret) {
 			if(ret['status'] != SCAN_WX_STATUS_SUCCESS)
 			{
-				alert("用户名或密码错误！");
+				scan_alert("错误", "用户名或密码错误！");
 			} else {
 				window.open("rule.html", "_self");
 			}
 		}, "json");
-	return false;
+} );
+
+$("#login_form table input").keyup( function(e) {
+	if(e.which == 13) 
+		$("#login_submit").click();
+	return true;
 } );
 		</script>
 	</body>
