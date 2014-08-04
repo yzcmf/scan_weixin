@@ -35,7 +35,8 @@ function scan_wx_response_full_match($content, $from_user, $uid)
 		$result = $wx->query(
 			"SELECT `index_key`
 			 FROM `reply_meta`
-			 WHERE `id` = $rule_id");
+			 WHERE `id` = $rule_id
+			   AND `reply_key` = 'reply'");
 
 		$wx->record_message($rule_id, $from_user, $content);
 		$reply_id = scan_select_from_result($result);

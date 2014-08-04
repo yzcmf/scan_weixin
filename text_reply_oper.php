@@ -115,7 +115,7 @@ case 'change_rule_name':
 	   !isset($_POST['rule_name_new']))
 		scan_error_exit(SCAN_WX_STATUS_ERROR);
 	scan_error_exit($wx->rename_rule(
-		$_POST['rid'], $_POST['rule_name_new']));
+		$_POST['rid'], $_POST['rule_name_new'], $uid));
 	break;
 case 'get_rule_info':
 /* action = 'get_rule_info'
@@ -133,7 +133,7 @@ case 'get_all_rules':
  * @brief 所有规则名称 */
 	$ret = $wx->get_all_rules($uid);
 	if($ret === false)
-		scan_error_exit(SCAN_WX_STATUS_ERROR);
+		scan_error_exit(SCAN_WX_STATUS_FORBIDDEN);
 	scan_error_exit(SCAN_WX_STATUS_SUCCESS, $ret);
 	break;
 case 'set_reply_time':
@@ -206,6 +206,18 @@ case 'set_rule_record':
 		scan_error_exit(SCAN_WX_STATUS_ERROR);
 	scan_error_exit($wx->set_rule_record(
 		$_POST['rid'], $_POST['record_require'], $uid));
+case 'set_match_require':
+/* action = 'set_match_require'
+ * @brief 设置最少需要匹配的关键字数
+ * @param rid             规则的 ID 
+ * @param match_require   需要匹配次数 */
+	if(!isset($_POST['rid']) || !isset($_POST['match_require']))
+		scan_error_exit(SCAN_WX_STATUS_ERROR);
+	$match_require = intval($_POST['match_require'], 10);
+	if($match_require < 1) 
+		scan_error_exit(SCAN_WX_STATUS_ERROR);
+	scan_error_exit($wx->update_meta_public(
+		$_POST['rid'], 'match_require', $match_require, $uid));
 default:
 	scan_error_exit(SCAN_WX_STATUS_ERROR);
 }

@@ -1,5 +1,4 @@
 var SCAN_WX_STATUS_SUCCESS = "success";
-var SCAN_WX_STATUS_NOLOGIN = "nologin";
 
 function scan_alert(title, content)
 {
@@ -75,3 +74,10 @@ function encode_html(content)
 		 .replace(/\n/g, "<br />");
 }
 
+function limit_input_number(e)
+{
+	if(!e.which || e.which == 8) return true;
+	if(e.which < 48 || e.which > 57)
+		return false;
+	return true;
+} 

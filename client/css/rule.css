@@ -84,6 +84,8 @@
 	margin-right: 10px;
 	vertical-align: middle;
 	font-size: 14px;
+	display: inline-block;
+	width: 95px;
 }
 
 .rule_modify a {

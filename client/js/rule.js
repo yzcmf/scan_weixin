@@ -1,4 +1,5 @@
 var flush_count = 0;
+var global_uid = -1;
 $(document).ready( function() {
 	$.getJSON("../account.php?action=get_user_info", 
 		function(data) {
@@ -46,7 +47,8 @@ $(document).ready( function() {
 			return;
 		$(this).data("running", true);
 		var rtemp;
-		$.getJSON("../text_reply_oper.php?action=get_all_rules", 
+		$.post("../text_reply_oper.php?action=get_all_rules", 
+			{ uid : global_uid },
 			function(rules) {
 				++flush_count;
 				if(!check_status(rules.status))
@@ -54,32 +56,27 @@ $(document).ready( function() {
 				if(flush_count % 2 == 0)
 					reflush_rule(rules, $("#rule_wrap"));
 				else rtemp = rules;
-			} );
+			}, "json" );
 		$("#rule_wrap").fadeOut( function() {
 			$(this).empty();
 			$(this).fadeIn();
-			if(++flush_count % 2 == 0)
+			if(++flush_count % 2 == 0 && rtemp != undefined)
 				reflush_rule(rtemp, $("#rule_wrap"));
 		} );
 	} );
 
-	$.getJSON("../text_reply_oper.php?action=get_all_rules", 
+	$.post("../text_reply_oper.php?action=get_all_rules", 
+		{ uid : global_uid },
 		function(rules) {
 			if(!check_status(rules['status']))
 				return;
 
 			$("#rule_tool").fadeIn();
 
-			$(".lw").keypress( function(e) {
-				if(!e.which || e.which == 8) return true;
-				if(e.which < 48 || e.which > 57)
-					return false;
-				return true;
-			} );
-
+			$(".lw").keypress(limit_input_number);
 			$("#waiting_msg").remove();
 			reflush_rule(rules, $("#rule_wrap"));
-		} );
+		}, "json" );
 } );
 
 function smooth_change_text(elem, text)
@@ -112,7 +109,7 @@ function create_single_rule(rule_num, rule_info)
 
 	create_rule_head(wrap, rule_num, rule_info);
 	$.post("../text_reply_oper.php?action=get_rule_info", 
-		{ rid : rule_info.rid },
+		{ rid : rule_info.rid, uid : global_uid },
 		function(wrap) {
 			return function(rule) {
 				wrap.children(".rule_head").click( function() {
@@ -254,6 +251,26 @@ function generate_span_input(default_value)
 	return span_wrap;
 }
 
+function create_rule_modify_input(title, text, action)
+{
+	var rule_name_wrap = $("<div></div>");
+	rule_name_wrap.addClass("rule_head_meta");
+	var rule_name_area = $("<div></div>");
+
+	$("<label></label>")
+		.addClass("rule_modify_detail")
+		.addClass("circle_bk")
+		.text(title)
+		.appendTo(rule_name_area);
+
+	var rule_name_input = generate_span_input(text);
+	rule_name_input.children("input").keyup(action);
+
+	rule_name_area.append(rule_name_input);
+	rule_name_wrap.append(rule_name_area);
+	return rule_name_wrap;
+}
+
 function create_rule_modify(wrap, rule)
 {
 	// 添加修改信息
@@ -262,24 +279,9 @@ function create_rule_modify(wrap, rule)
 	rule_modify.hide();
 
 	// 规则名区域
-	var rule_name_wrap = $("<div></div>");
-	rule_name_wrap.addClass("rule_head_meta");
-	rule_name_wrap.data("rid", rule.rid);
-	var rule_name_area = $("<div></div>");
-	rule_name_area.css("float", "left");
-
-	$("<label></label>")
-		.addClass("rule_modify_detail")
-		.addClass("circle_bk")
-		.text("规则名称")
-		.appendTo(rule_name_area);
-
-	var rule_name_input = generate_span_input(rule.rule_name);
-	rule_name_input.children("input").data("rid", rule.rid);
-	rule_name_input.children("input").keyup(event_rename_rule);
-
-	rule_name_area.append(rule_name_input);
-	rule_name_wrap.append(rule_name_area);
+	var rule_name_wrap = create_rule_modify_input(
+		"规则名称", rule.rule_name, event_rename_rule);
+	rule_name_wrap.children().first().css("float", "left");
 
 	// 添加删除规则按钮
 	var rule_remove = $("<div></div>");
@@ -292,6 +294,12 @@ function create_rule_modify(wrap, rule)
 	rule_name_wrap.append(rule_remove);
 
 	rule_modify.append(rule_name_wrap);
+
+	// 匹配次数区域
+	var rule_match_req = create_rule_modify_input(
+		"需要匹配次数", rule.match_require, event_match_require_set);
+	rule_match_req.find("input[type=text]").keyup(limit_input_number);
+	rule_modify.append(rule_match_req);
 
 	// 消息记录区域
 	create_rule_modify_record(rule_modify, rule.record_require == "1");
@@ -452,6 +460,18 @@ function create_time_li(head, time_type, time_str)
 	return $("<li></li>").data("time_str", time_str).append(item);
 }
 
+function create_rule_modify_match_num(wrap, match_require)
+{
+	var head = create_rule_modify_head("匹配");
+	if(record_require)
+		head.oper.text("取消记录");
+	else head.oper.text("设置记录");
+	head.oper.data("record_require", record_require);
+	head.oper.click(event_set_record(head.head));
+
+	wrap.append(head.head);
+}
+
 function create_rule_modify_record(wrap, record_require)
 {
 	var str = record_require ? "true" : "false";
@@ -518,8 +538,9 @@ function event_rename_rule(event)
 	var th = $(this);
 	var new_rule_name = th.val();
 	$.post("../text_reply_oper.php?action=change_rule_name", 
-		{ rid : th.data("rid"), 
-		  rule_name_new : new_rule_name }, 
+		{ rid : find_wrap(th).data("rid"), 
+		  rule_name_new : new_rule_name, 
+		  uid : global_uid }, 
 		function(data) {
 			if(!check_status(data.status))
 				return;
@@ -542,7 +563,8 @@ function event_modify_content_solve(content, elem, title)
 
 	$.post("../text_reply_oper.php?action=update_content", 
 		{ content_index : meta_id, 
-		  content : new_content }, 
+		  content : new_content,
+		  uid : global_uid }, 
 		function(data) {
 			if(!check_status(data.status))
 				return;
@@ -588,7 +610,8 @@ function event_remove_content(meta_id)
 		var th = $(this);
 		scan_confirm("真的要删除吗？", function() {
 			$.post("../text_reply_oper.php?action=remove_content", 
-				{ content_index : meta_id }, 
+				{ content_index : meta_id, 
+				  uid : global_uid }, 
 				function(data) {
 					if(!check_status(data.status))
 						return;
@@ -609,13 +632,13 @@ function event_insert_content_solve(body, elem, type, title)
 	}
 
 	$.post("../text_reply_oper.php?action=insert_" + type,
-		{ rid: rid, value: [value] }, 
+		{ rid: rid, value: [value], uid: global_uid }, 
 		function(data) {
 			if(!check_status(data.status))
 				return;
 			// 获取新加入元素的 ID 并显示
 			$.post("../text_reply_oper.php?action=get_rule_info", 
-				{ rid : rid }, 
+				{ rid : rid, uid : global_uid }, 
 				function(data) {
 					if(!check_status(data.status))
 						return;
@@ -687,7 +710,9 @@ function event_remove_time(head)
 		var rid = find_wrap(th).data("rid");
 		scan_confirm("真的要删除吗？", function() {
 			$.post("../text_reply_oper.php?action=remove_reply_time", 
-				{ rid : rid, time_str : li.data("time_str") }, 
+				{ rid : rid, 
+				  time_str : li.data("time_str"), 
+				  uid : global_uid },
 				function(data) {
 					if(!check_status(data.status))
 						return;
@@ -739,7 +764,8 @@ function event_modify_time(head)
 			$.post("../text_reply_oper.php?action=change_reply_time", 
 				{ rid : rid, 
 				  time_old : li.data("time_str"),
-				  time_new : time_str },
+				  time_new : time_str,
+				  uid : global_uid },
 				function(data) {
 					if(!check_status(data.status))
 						return;
@@ -765,7 +791,10 @@ function event_reset_time(head)
 			var type = elem.find("select").val();
 			var rid = find_wrap(head).data("rid");
 			$.post("../text_reply_oper.php?action=set_reply_time", 
-				{ rid : rid, time_type : type, time_str : "" },
+				{ rid : rid, 
+				  time_type : type, 
+				  time_str : "",
+				  uid : global_uid },
 				function(data) {
 					if(!check_status(data.status))
 						return;
@@ -795,7 +824,9 @@ function event_set_record(head)
 		var rid = find_wrap(head).data("rid");
 		var th = $(this);
 		$.post("../text_reply_oper.php?action=set_rule_record", 
-			{ rid: rid, record_require: record_require ? "0" : "1" }, 
+			{ rid: rid, 
+			  record_require: record_require ? "0" : "1",
+			  uid: global_uid }, 
 			function(data) {
 				if(!check_status(data.status))
 					return;
@@ -815,7 +846,7 @@ function event_show_record()
 {
 	var rid = find_wrap($(this)).data("rid");
 	$.post("../text_reply_oper.php?action=get_rule_record", 
-		{ rid : rid }, function(data) {
+		{ rid : rid, uid : global_uid }, function(data) {
 			if(!check_status(data.status))
 				return;
 
@@ -937,7 +968,7 @@ function event_add_time_solve(body, elem, type)
 	var rid = find_wrap(body).data("rid");
 	var list = body.find("ul");
 	$.post("../text_reply_oper.php?action=insert_reply_time", 
-		{ rid : rid, time_str : time_str }, 
+		{ rid : rid, time_str : time_str, uid : global_uid }, 
 		function(data) {
 			if(!check_status(data.status))
 				return;
@@ -976,10 +1007,14 @@ function event_change_passwd(elem)
 
 	$.post("../account.php?action=change_password", 
 		{ old_password : $.md5(old_passwd), 
-		  new_password : $.md5(new_passwd) }, 
+		  new_password : $.md5(new_passwd), 
+		  uid : global_uid }, 
 		function(data) {
 			if(data.status != SCAN_WX_STATUS_SUCCESS)
+			{
 				scan_alert("错误", "修改失败");
+				return;
+			}
 			scan_alert("通知", "密码修改成功");
 		}, "json");
 	return true;
@@ -991,7 +1026,7 @@ function event_remove_rule(rid, wrap)
 		scan_confirm("删除后不可恢复<br />真的要删除规则吗？",  
 			function() {
 				$.post("../text_reply_oper.php?action=remove",  
-					{ rid : rid }, function(data) {
+					{ rid : rid, uid : global_uid }, function(data) {
 						if(!check_status(data.status))
 							return;
 						wrap.fadeOut( function() {
@@ -1014,11 +1049,13 @@ function event_add_rule(elem, rule_num)
 
 	$.post("../text_reply_oper.php?action=insert", 
 		{ rule_name : rule_name, 
-		  match_type : elem.children(".dlg_match_type").val() }, 
+		  match_type : elem.children(".dlg_match_type").val(),
+		  uid : global_uid }, 
 		function(data) {
 			if(!check_status(data.status))
 				return;
-			$.getJSON("../text_reply_oper.php?action=get_all_rules", 
+			$.post("../text_reply_oper.php?action=get_all_rules", 
+				{ uid : global_uid },
 				function(rules) {
 					if(!check_status(rules.status))
 						return;
@@ -1037,7 +1074,7 @@ function event_add_rule(elem, rule_num)
 
 					create_single_rule(rules.count, 
 						rules[rid_pos]).prependTo($("#rules_list"));
-				} );
+				}, "json" );
 		}, "json");
 	return true;
 }
@@ -1060,6 +1097,29 @@ function event_register_user(elem)
 			scan_alert("通知", "添加用户成功");
 		}, "json");
 
+	return true;
+}
+
+function event_match_require_set(event)
+{
+	if(event.which != 13) return true;
+	var match_require = parseInt($(this).val(), 10);
+	if(match_require <= 0)
+	{
+		scan_alert("错误", "关键字需要匹配的最少次数不能够小于1");
+		return true;
+	}
+
+	var th = $(this);
+	$.post("../text_reply_oper.php?action=set_match_require", 
+		{ rid: find_wrap($(this)).data("rid"), 
+		  match_require: match_require, 
+		  uid: global_uid }, function(data) {
+		 	if(!check_status(data.status))
+				return;
+			th.fadeOut();
+			th.fadeIn();
+		}, "json");
 	return true;
 }
 

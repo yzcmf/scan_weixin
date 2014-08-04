@@ -92,6 +92,7 @@ function wx_change_passwd()
 	if(!isset($_POST['uid']))
 		$uid = $current_uid;
 	else $uid = intval($_POST['uid'], 10);
+	if($uid == -1) $uid = $current_uid;
 
 	if($uid != $current_uid && !$is_admin)
 		scan_error_exit(SCAN_WX_STATUS_FORBIDDEN);

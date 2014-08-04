@@ -338,6 +338,7 @@ class scan_wx_database
 
 		$this->query("DELETE FROM `reply_meta` WHERE `id` = $rid");
 		$this->query("DELETE FROM `reply_map` WHERE `id` = $rid");
+		$this->query("DELETE FROM `record` WHERE `rule_id` = $rid");
 		return SCAN_WX_STATUS_SUCCESS;
 	}
 
@@ -523,6 +524,35 @@ class scan_wx_database
 			$this->insert_meta($rid, 'record_require', $record_require, $uid);
 		else $this->update_meta($meta_id, $record_require, $uid);
 
+		return SCAN_WX_STATUS_SUCCESS;
+	}
+
+	public function check_public_meta_key($key)
+	{
+		$available_key = array( 'match_require' );
+		foreach($available_key as $a)
+			if($a == $key) return true;
+		return false;
+	}
+
+	public function update_meta_public($rid, $key, $value, $uid = -1)
+	{
+		if(!$this->check_public_meta_key($key))
+			return SCAN_WX_STATUS_FORBIDDEN;
+		$uid = intval($uid, 10);
+		if($uid == -1) $uid = $this->uid;
+		if(!$this->check_uid($uid)) 
+			return SCAN_WX_STATUS_FORBIDDEN;
+		$rid = intval($rid, 10);
+		$rule_owner = $this->get_rule_owner($rid);
+		if($rule_owner === false)
+			return SCAN_WX_STATUS_RULE_NOT_EXIST;
+		if($rule_owner != $uid) 
+			return SCAN_WX_STATUS_FORBIDDEN;
+		$meta_id = $this->get_meta_id($rid, $key);
+		if(!$meta_id) 
+			$this->insert_meta($rid, $key, $value, $uid);
+		$this->update_meta($meta_id, $value, $uid);
 		return SCAN_WX_STATUS_SUCCESS;
 	}
 

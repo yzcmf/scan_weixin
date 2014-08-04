@@ -30,11 +30,14 @@
 		</div>
 		<script type="text/javascript">
 $("#login_submit").click( function() {
+	if($("#login_submit").attr("disabled"))
+		return;
 	$("#login_submit").attr("disabled", true);
 	$.post("../account.php?action=login", 
 		{ username : $("#login_username").val(), 
 		  password : $.md5($("#login_password").val()) },
 		function(ret) {
+			$("#login_submit").attr("disabled", false);
 			if(ret['status'] != SCAN_WX_STATUS_SUCCESS)
 			{
 				scan_alert("错误", "用户名或密码错误！");
