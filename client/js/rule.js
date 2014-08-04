@@ -3,7 +3,7 @@ $(document).ready( function() {
 	$.getJSON("../account.php?action=get_user_info", 
 		function(data) {
 			if(data.status != SCAN_WX_STATUS_SUCCESS)
-				window.open("index.php", "_self");
+				window.open("login.php", "_self");
 			if(data.role == "administrator")
 			{
 				$("#register_user").show();
@@ -81,6 +81,14 @@ $(document).ready( function() {
 			reflush_rule(rules, $("#rule_wrap"));
 		} );
 } );
+
+function smooth_change_text(elem, text)
+{
+	elem.fadeOut( function() {
+		elem.text(text);
+		elem.fadeIn();
+	} );
+}
 
 function reflush_rule(rules, wrap)
 {
@@ -218,13 +226,19 @@ function create_rule_body(wrap, rule)
 
 	create_rule_body_item("回复类型", 
 		map_reply_type(rule.match_type)).appendTo(rule_body);
+
+	var record_str = rule.record_require == "1" ? "true" : "false";
+	record_str += "，共 " + rule.record_num + " 条";
+	create_rule_body_item("记录消息", record_str).appendTo(rule_body);
+
 	if(rule.match_type != "fallback")
 	{
 		if(rule.match_require == undefined)
 			rule.match_require = 1;
-		create_rule_body_item("匹配次数",
+		create_rule_body_item("需要匹配次数",
 			rule.match_require).appendTo(rule_body);
 	}
+
 	create_rule_body_item("回复时间类型",
 		rule.time_type).appendTo(rule_body);
 
@@ -268,7 +282,7 @@ function create_rule_modify(wrap, rule)
 	rule_name_wrap.append(rule_name_area);
 
 	// 添加删除规则按钮
-	var rule_remove= $("<div></div>");
+	var rule_remove = $("<div></div>");
 	rule_remove.addClass("oper");
 	var rule_remove_link = $("<a></a>");
 	rule_remove_link.attr("href", "javascript:;");
@@ -278,6 +292,9 @@ function create_rule_modify(wrap, rule)
 	rule_name_wrap.append(rule_remove);
 
 	rule_modify.append(rule_name_wrap);
+
+	// 消息记录区域
+	create_rule_modify_record(rule_modify, rule.record_require == "1");
 
 	// 回复时间类型
 	create_rule_modify_time(rule_modify, rule.time_type, rule.time_str);
@@ -300,13 +317,7 @@ function create_rule_modify(wrap, rule)
 
 function format_content(item, content, title)
 {
-	var content_v = content
-				 .replace(/&/g, "&amp")
-				 .replace(/</g, "&lt;")
-				 .replace(/>/g, "&gt;")
-				 .replace(/ /g, "&nbsp;")
-				 .replace(/\n/g, "<br />");
-
+	var content_v = encode_html(content);
 	if(content.replace(/\s/g, "") == "")
 	{
 		item.addClass("content_empty");
@@ -439,6 +450,25 @@ function create_time_li(head, time_type, time_str)
 	item.append(oper);
 
 	return $("<li></li>").data("time_str", time_str).append(item);
+}
+
+function create_rule_modify_record(wrap, record_require)
+{
+	var str = record_require ? "true" : "false";
+	var head = create_rule_modify_head("记录消息（" + str + "）");
+	if(record_require)
+		head.oper.text("取消记录");
+	else head.oper.text("设置记录");
+	head.oper.data("record_require", record_require);
+	head.oper.click(event_set_record(head.head));
+
+	var oper_link = $("<a></a>");
+	oper_link.attr("href", "javascript:;");
+	oper_link.text("查看记录");
+	oper_link.click(event_show_record);
+	head.oper.after(oper_link);
+
+	wrap.append(head.head);
 }
 
 function create_rule_modify_time(wrap, time_type, time_str)
@@ -745,10 +775,7 @@ function event_reset_time(head)
 						th.next().fadeOut();
 					else th.next().fadeIn();
 					var title = head.children(".info").children("span");
-					title.fadeOut( function() {
-						title.text("回复时间（" + type + "）");
-						title.fadeIn();
-					} );
+					smooth_change_text(title, "回复时间（" + type + "）");
 
 					head.next().find("li").fadeOut( function() {
 						$(this).remove();
@@ -759,6 +786,101 @@ function event_reset_time(head)
 
 		return true;
 	};
+}
+
+function event_set_record(head)
+{
+	return function() {
+		var record_require = $(this).data("record_require");
+		var rid = find_wrap(head).data("rid");
+		var th = $(this);
+		$.post("../text_reply_oper.php?action=set_rule_record", 
+			{ rid: rid, record_require: record_require ? "0" : "1" }, 
+			function(data) {
+				if(!check_status(data.status))
+					return;
+
+				th.data("record_require", !record_require);
+				smooth_change_text(th, 
+					record_require ? "设置记录" : "取消记录");
+
+				var title = head.children(".info").children("span");
+				smooth_change_text(title, "记录消息（" 
+					+ (record_require ? "false）" : "true）"));
+			}, "json");
+	};
+}
+
+function event_show_record()
+{
+	var rid = find_wrap($(this)).data("rid");
+	$.post("../text_reply_oper.php?action=get_rule_record", 
+		{ rid : rid }, function(data) {
+			if(!check_status(data.status))
+				return;
+
+			var wrap = $("<div></div>");
+			wrap.addClass("show_record_wrap");
+
+			var list = $("<ul></ul>");
+
+			for(var i = data.count - 1; i >= 0; --i)
+			{
+				var elem = $("<div></div>");
+				elem.addClass("show_record_elem");
+
+				$("<span></span>")
+					.text(data[i].date)
+					.addClass("record_date")
+					.appendTo(elem);
+
+				$("<span></span>")
+					.text("（" + data[i].from + "）")
+					.addClass("record_from")
+					.appendTo(elem);
+
+				var content = data[i].content;
+				var break_str = false;
+				if(content.length > 250)
+				{
+					content = content.slice(0, 250) + " ";
+					break_str = true;
+				}
+
+				var obj = $("<div></div>")
+					.html(encode_html(content))
+					.addClass("record_content")
+					.appendTo(elem);
+
+				if(break_str)
+				{
+					var link = $("<a></a>");
+					link.data("content", encode_html(data[i].content));
+					link.attr("href", "javascript:;");
+					link.text("...");
+					link.click( function() {
+						var content = $(this).data("content");
+						$(this).parent().fadeOut( function() {
+							$(this).html(content);
+							$(this).fadeIn();
+						} );
+					} );
+					obj.append(link);
+				}
+
+				$("<li></li>").append(elem).appendTo(list);
+			}
+
+			wrap.append(list);
+			$.dialog( {
+				title: "消息记录",
+				padding: "0px",
+				content: wrap.get(0),
+				lock: true,
+				esc: false,
+				width: 500,
+				height: 400 } );
+		}, "json");
 }
 
 function complete_time(arr)

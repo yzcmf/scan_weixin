@@ -63,3 +63,15 @@ function map_reply_type(type)
 		return "fallback";
 	}
 }
+
+function encode_html(content)
+{
+	return content
+		 .replace(/&/g, "&amp")
+		 .replace(/</g, "&lt;")
+		 .replace(/>/g, "&gt;")
+		 .replace(/ /g, "&nbsp;")
+		 .replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;")
+		 .replace(/\n/g, "<br />");
+}
+

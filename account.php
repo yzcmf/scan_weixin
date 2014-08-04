@@ -14,7 +14,7 @@ function wx_login()
 	{
 		scan_error_exit(SCAN_WX_STATUS_ERROR);
 	} else {
-		$username = $wx->escape_sql_string($_POST['username']);
+		$username = $wx->escape_sql_string(trim($_POST['username']));
 		$password = sha1(trim($_POST['password']) . SCAN_WX_PASSWORD_SALT);
 		$row = $wx->get_first_row("SELECT * FROM `user` WHERE `username` = '$username'");
 		if(!$row || $row['password'] != $password) {

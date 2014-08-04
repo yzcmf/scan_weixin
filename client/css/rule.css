@@ -103,6 +103,8 @@
 
 .rule_modify_item_body li {
 	position: relative;
+	word-wrap: break-word;
+	overflow: hidden;
 	line-height: 39px;
 	border-bottom: 1px solid #e8e8e8;
 }
@@ -186,3 +188,26 @@
 .dialog_two select {
 	width: 150px;
 }
+
+.show_record_wrap {
+	overflow: auto;
+	width: 500px;
+	height: 368px;
+}
+
+.show_record_wrap ul {
+	padding: 10px 25px;
+}
+
+.show_record_wrap ul li {
+	margin-bottom: 10px;
+}
+
+.record_content {
+	padding-top: 3px;
+	margin-top: 3px;
+	padding-left: 15px;
+	word-wrap: break-word;
+	overflow: hidden;
+}
+

@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Aug 02, 2014 at 01:45 AM
+-- Generation Time: Aug 04, 2014 at 05:58 PM
 -- Server version: 5.5.38-MariaDB
 -- PHP Version: 5.5.15
 
@@ -23,6 +23,20 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `record`
+--
+
+CREATE TABLE IF NOT EXISTS `record` (
+`id` int(11) NOT NULL,
+  `rule_id` int(11) NOT NULL,
+  `from_user` text NOT NULL,
+  `content` text NOT NULL,
+  `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0 ;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `reply_map`
 --
 
@@ -31,11 +45,7 @@ CREATE TABLE IF NOT EXISTS `reply_map` (
   `type` enum('php_reply','full_match','sub_match','fallback') NOT NULL,
   `rule_name` text NOT NULL,
   `uid` int(11) NOT NULL
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=16 ;
-
---
--- Dumping data for table `reply_map`
---
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0 ;
 
 -- --------------------------------------------------------
 
@@ -48,11 +58,7 @@ CREATE TABLE IF NOT EXISTS `reply_meta` (
   `reply_key` text NOT NULL,
   `reply_value` text NOT NULL,
   `id` int(11) NOT NULL
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=107 ;
-
---
--- Dumping data for table `reply_meta`
---
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0 ;
 
 -- --------------------------------------------------------
 
@@ -65,11 +71,7 @@ CREATE TABLE IF NOT EXISTS `user` (
   `username` text NOT NULL,
   `password` text NOT NULL,
   `role` enum('administrator','common') NOT NULL
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=3 ;
-
---
--- Dumping data for table `user`
---
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0 ;
 
 -- --------------------------------------------------------
 
@@ -82,15 +84,17 @@ CREATE TABLE IF NOT EXISTS `user_meta` (
   `uid` int(11) NOT NULL,
   `user_key` text NOT NULL,
   `user_value` text NOT NULL
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=3 ;
-
---
--- Dumping data for table `user_meta`
---
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0 ;
 
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `record`
+--
+ALTER TABLE `record`
+ ADD PRIMARY KEY (`id`), ADD KEY `rule_id` (`rule_id`);
 
 --
 -- Indexes for table `reply_map`
@@ -102,7 +106,7 @@ ALTER TABLE `reply_map`
 -- Indexes for table `reply_meta`
 --
 ALTER TABLE `reply_meta`
- ADD PRIMARY KEY (`index_key`);
+ ADD PRIMARY KEY (`index_key`), ADD KEY `id` (`id`);
 
 --
 -- Indexes for table `user`
@@ -121,25 +125,30 @@ ALTER TABLE `user_meta`
 --
 
 --
+-- AUTO_INCREMENT for table `record`
+--
+ALTER TABLE `record`
+MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=0;
+--
 -- AUTO_INCREMENT for table `reply_map`
 --
 ALTER TABLE `reply_map`
-MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=16;
+MODIFY `id` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=0;
 --
 -- AUTO_INCREMENT for table `reply_meta`
 --
 ALTER TABLE `reply_meta`
-MODIFY `index_key` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=107;
+MODIFY `index_key` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=0;
 --
 -- AUTO_INCREMENT for table `user`
 --
 ALTER TABLE `user`
-MODIFY `uid` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=3;
+MODIFY `uid` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=0;
 --
 -- AUTO_INCREMENT for table `user_meta`
 --
 ALTER TABLE `user_meta`
-MODIFY `index_key` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=3;
+MODIFY `index_key` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=0;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

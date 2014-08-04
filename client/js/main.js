@@ -4,7 +4,7 @@ $(document).ready( function() {
 	power_by.html("Powered By <a href=\"http://miskcoo.com\">miskcoo</a> @ 2014");
 	$("body").append(power_by);
 
-	var offset = $(window).height() - power_by.position().top;
+	var offset = 30;
 	var scroll_event = function() {
 		power_by.css("top", $(this).scrollTop()
 			+ $(this).height() - offset);

@@ -14,7 +14,7 @@ function scan_wx_register_php_reply($function_name, $checker)
 		array($function_name, $checker));
 }
 
-function scan_wx_response_php_reply($content)
+function scan_wx_response_php_reply($content, $from_user)
 {
 	global $scan_wx_php_reply_seq;
 	foreach($scan_wx_php_reply_seq as $v)

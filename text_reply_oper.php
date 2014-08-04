@@ -187,6 +187,25 @@ case 'change_reply_time':
 		scan_error_exit(SCAN_WX_STATUS_ERROR);
 	scan_error_exit($wx->update_text_reply_time(
 		$_POST['rid'], $_POST['time_old'], $_POST['time_new'], $uid));
+case 'get_rule_record':
+/* action = 'get_rule_record'
+ * @brief 获取记录的消息
+ * @param rid        规则的 ID  */
+	if(!isset($_POST['rid']))
+		scan_error_exit(SCAN_WX_STATUS_ERROR);
+	$ret = $wx->get_rule_record($_POST['rid'], $uid);
+	if(!is_array($ret))
+		scan_error_exit($ret);
+	scan_error_exit(SCAN_WX_STATUS_SUCCESS, $ret);
+case 'set_rule_record':
+/* action = 'set_rule_record'
+ * @brief 设置是否记录消息
+ * @param rid             规则的 ID 
+ * @param record_require  是否记录消息（1或0） */
+	if(!isset($_POST['rid']) || !isset($_POST['record_require']))
+		scan_error_exit(SCAN_WX_STATUS_ERROR);
+	scan_error_exit($wx->set_rule_record(
+		$_POST['rid'], $_POST['record_require'], $uid));
 default:
 	scan_error_exit(SCAN_WX_STATUS_ERROR);
 }

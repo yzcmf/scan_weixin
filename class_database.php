@@ -311,13 +311,13 @@ class scan_wx_database
 		{
 		case SCAN_WX_TIME_ALL:
 			if($range_id)
-				$this->remove_meta($this->get_meta_id($rid, 'time_range'), $uid);
+				$this->remove_meta($range_id, $uid);
 			$this->update_meta($this->get_meta_id($rid, 'time_type'), SCAN_WX_TIME_ALL, $uid);
 			break;
 		default:
 			$this->update_meta($this->get_meta_id($rid, 'time_type'), $time_type, $uid);
 			if($range_id)
-				$this->update_meta($this->get_meta_id($rid, 'time_range'), $time, $uid);
+				$this->update_meta($range_id, $time, $uid);
 			else $this->insert_meta($rid, 'time_range', $time, $uid);
 			break;
 		}
@@ -439,6 +439,8 @@ class scan_wx_database
 		$ret['match_type'] = $rinfo['type'];
 		$ret['keyword'] = array();
 		$ret['reply'] = array();
+		$ret['record_num'] = $this->get_result(
+			"SELECT COUNT(`id`) FROM `record` WHERE `rule_id` = $rid");
 		$result = $this->query($sql);
 		while($row = $result->fetch_row())
 		{
@@ -461,6 +463,9 @@ class scan_wx_database
 				break;
 			}
 		}
+
+		if(!isset($ret['record_require']))
+			$ret['record_require'] = 0;
 		$ret['time_type'] = $time_type;
 		if($time_type != SCAN_WX_TIME_ALL)
 		{
@@ -492,6 +497,65 @@ class scan_wx_database
 			++$count;
 		}
 		$ret['count'] = $count;
+		$result->free();
+		return $ret;
+	}
+
+	/* @brief 设置是否记录规则 */
+	public function set_rule_record($rid, $record_require, $uid = -1)
+	{
+		$uid = intval($uid, 10);
+		if($uid == -1) $uid = $this->uid;
+		if(!$this->check_uid($uid)) 
+			return SCAN_WX_STATUS_FORBIDDEN;
+		$rid = intval($rid, 10);
+		$rule_owner = $this->get_rule_owner($rid);
+		if($rule_owner === false)
+			return SCAN_WX_STATUS_RULE_NOT_EXIST;
+		if($rule_owner != $uid) 
+			return SCAN_WX_STATUS_FORBIDDEN;
+
+		$record_require = intval($record_require, 10);
+		if($record_require) $record_require = 1;
+
+		$meta_id = $this->get_meta_id($rid, 'record_require');
+		if(!$meta_id)
+			$this->insert_meta($rid, 'record_require', $record_require, $uid);
+		else $this->update_meta($meta_id, $record_require, $uid);
+
+		return SCAN_WX_STATUS_SUCCESS;
+	}
+
+
+	/* @brief 获得规则记录的 content */
+	public function get_rule_record($rid, $uid = -1)
+	{
+		$uid = intval($uid, 10);
+		if($uid == -1) $uid = $this->uid;
+		if(!$this->check_uid($uid)) 
+			return SCAN_WX_STATUS_FORBIDDEN;
+		$rid = intval($rid, 10);
+		$rule_owner = $this->get_rule_owner($rid);
+		if($rule_owner === false)
+			return SCAN_WX_STATUS_RULE_NOT_EXIST;
+		if($rule_owner != $uid) 
+			return SCAN_WX_STATUS_FORBIDDEN;
+
+		$sql = "SELECT * FROM `record`
+			    WHERE `rule_id` = $rid";
+		$result = $this->query($sql);
+		$ret = array();
+		$ret['count'] = $result->num_rows;
+		while($row = $result->fetch_array())
+		{
+			array_push($ret, array(
+				'index' => $row['id'],
+				'rid' => $row['rule_id'],
+				'from' => $row['from_user'],
+				'content' => $row['content'],
+				'date' => $row['date']));
+		}
+
 		$result->free();
 		return $ret;
 	}
@@ -612,6 +676,29 @@ class scan_wx_database
 		return $this->get_result(
 			"SELECT `reply_value` FROM `reply_meta`
 			 WHERE `id` = $rid AND `reply_key` = 'time_type'");
+	}
+
+	/* @brief 记录用户信息 
+	   @param $rid       规则 ID
+	   @param $from_user 发信息的用户 
+	   @param $content   信息内容 */
+	public function record_message($rid, $from_user, $content)
+	{
+		$rid = intval($rid, 10);
+
+		// 查找该规则是否需要记录
+		$record_require = $this->get_result(
+			"SELECT `reply_value` FROM `reply_meta`
+			 WHERE `id` = $rid AND `reply_key` = 'record_require'");
+		if($record_require != "1")
+			return;
+
+		// 记录信息
+		$from_user = $this->escape_sql_string($from_user);
+		$content = $this->escape_sql_string($content);
+		$this->query("INSERT INTO `record` 
+					 (`rule_id`, `from_user`, `content`)
+			  VALUES ($rid, '$from_user', '$content')");
 	}
 
 	/* @brief 查询数据库并获得第一格内容 */

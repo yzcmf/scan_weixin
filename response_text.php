@@ -4,17 +4,18 @@ require_once('class_database.php');
 require_once('function.php');
 require_once('response_fallback.php');
 
-function scan_wx_response_full_match($content, $uid = -1)
+function scan_wx_response_full_match($content, $from_user, $uid)
 {
 	global $wx;
 	// 查询 full_match 部分
+	$esc_content = $wx->escape_sql_string($content);
 	$sql = "SELECT DISTINCT(m.id)
 			FROM `reply_meta` AS m 
 			INNER JOIN `reply_map` AS r
 			ON r.id = m.id
 			WHERE r.type = 'full_match'
 			  AND m.reply_key = 'keyword'
-			  AND m.reply_value = '$content'";
+			  AND m.reply_value = '$esc_content'";
 	if($uid != -1) $sql .= " AND r.uid = '$uid'";
 	$result = $wx->query($sql);
 
@@ -35,7 +36,10 @@ function scan_wx_response_full_match($content, $uid = -1)
 			"SELECT `index_key`
 			 FROM `reply_meta`
 			 WHERE `id` = $rule_id");
+
+		$wx->record_message($rule_id, $from_user, $content);
 		$reply_id = scan_select_from_result($result);
+		if($reply_id === false) return false;
 		return $wx->get_result(
 			"SELECT `reply_value`
 			 FROM `reply_meta`
@@ -45,7 +49,7 @@ function scan_wx_response_full_match($content, $uid = -1)
 	return false;
 }
 
-function scan_wx_response_sub_match($content, $uid = -1)
+function scan_wx_response_sub_match($content, $from_user, $uid)
 {
 	global $wx;
 	// 检查 sub_match
@@ -115,11 +119,14 @@ function scan_wx_response_sub_match($content, $uid = -1)
 				  AND m.id = $rule_id";
 		$result = $wx->query($sql);
 		while($row = $result->fetch_row())
-			array_push($ret, $row[0]);
+			array_push($ret, array($rule_id, $row[0]));
 		$result->free();
 	}
 
-	return $ret[rand(0, count($ret) - 1)];
+	if(count($ret) == 0) return false;
+	$index = rand(0, count($ret) - 1);
+	$wx->record_message($ret[$index][0], $from_user, $content);
+	return $ret[$index][1];
 }
 
 function scan_wx_response_check_uid($content)
@@ -142,16 +149,15 @@ function scan_wx_response_check_uid($content)
 	return $candidate[rand(0, $len - 1)];
 }
 
-function scan_wx_response_text($content)
+function scan_wx_response_text($content, $from_user)
 {
 	global $wx;
-	$escape_content = $wx->escape_sql_string($content);
-	$uid = scan_wx_response_check_uid($escape_content);
+	$uid = scan_wx_response_check_uid($content);
 	// 检测全匹配
-	$result = scan_wx_response_full_match($escape_content, $uid);
+	$result = scan_wx_response_full_match($content, $from_user, $uid);
 	if($result !== false) return $result;
 	// 检测部分匹配
-	$result = scan_wx_response_sub_match($escape_content, $uid);
+	$result = scan_wx_response_sub_match($content, $from_user, $uid);
 	if($result !== false) return $result;
 	// 检测 fallback
 	if($uid != -1) return scan_wx_response_fallback($uid);

@@ -10,6 +10,8 @@ function scan_error_exit($status, $info = array())
 
 function scan_select_from_result($result)
 {
+	if($result->num_rows == 0)
+		return false;
 	$candidate = array();
 	while($row = $result->fetch_row())
 		array_push($candidate, $row[0]);
