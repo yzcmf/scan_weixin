@@ -529,7 +529,7 @@ class scan_wx_database
 
 	public function check_public_meta_key($key)
 	{
-		$available_key = array( 'match_require' );
+		$available_key = array( 'match_require', 'reply_all' );
 		foreach($available_key as $a)
 			if($a == $key) return true;
 		return false;
@@ -588,6 +588,42 @@ class scan_wx_database
 
 		$result->free();
 		return $ret;
+	}
+
+	/* 删除规则记录
+	 * $rid     规则 ID
+	 * $time    如果 $by_time 为 true，那么删除时间在 $time 之前的记录，
+	            如果 $by_time 为 false，那么删除 id 为 $time 的记录
+				如果 $time 为 -1，删除所有记录
+	 * $by_time 决定怎么删除规则 */
+	public function clear_rule_record($rid, $time, $by_time, $uid = -1)
+	{
+		$uid = intval($uid, 10);
+		if($uid == -1) $uid = $this->uid;
+		if(!$this->check_uid($uid)) 
+			return SCAN_WX_STATUS_FORBIDDEN;
+		$rid = intval($rid, 10);
+		$rule_owner = $this->get_rule_owner($rid);
+		if($rule_owner === false)
+			return SCAN_WX_STATUS_RULE_NOT_EXIST;
+		if($rule_owner != $uid) 
+			return SCAN_WX_STATUS_FORBIDDEN;
+
+		if($time == -1)
+		{
+			$this->query("DELETE FROM `record` WHERE `rule_id` = $rid");
+		} elseif($by_time) {
+			$time = $this->escape_sql_string($time);
+			$this->query("DELETE FROM `record` 
+						  WHERE `rule_id` = $rid
+							AND `date` <= $time");
+		} else {
+			$record_id = intval($time, 10);
+			$this->query("DELETE FROM `record`
+					       WHERE `rule_id` = $rid
+						     AND `id` = $record_id");
+		}
+		return SCAN_WX_STATUS_SUCCESS;
 	}
 
 	private function get_meta_id($rid, $name)

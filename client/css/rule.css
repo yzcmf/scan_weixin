@@ -2,6 +2,10 @@
 	text-align: right;
 }
 
+.oper span {
+	color: #ffac00;
+}
+
 .info {
 	float: left;
 }

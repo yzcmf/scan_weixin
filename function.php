@@ -19,6 +19,17 @@ function scan_select_from_result($result)
 	return $candidate[rand(0, count($candidate) - 1)];
 }
 
+function scan_select_all($result)
+{
+	if($result->num_rows == 0)
+		return false;
+	$ret = '';
+	while($row = $result->fetch_row())
+		$ret .= $row[0] . "\n";
+	$result->free();
+	return $ret;
+}
+
 function scan_time_to_array($time_type, $time_str)
 {
 	$time_arr = explode('|', $time_str);

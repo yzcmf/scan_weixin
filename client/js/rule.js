@@ -224,12 +224,12 @@ function create_rule_body(wrap, rule)
 	create_rule_body_item("回复类型", 
 		map_reply_type(rule.match_type)).appendTo(rule_body);
 
-	var record_str = rule.record_require == "1" ? "true" : "false";
-	record_str += "，共 " + rule.record_num + " 条";
-	create_rule_body_item("记录消息", record_str).appendTo(rule_body);
-
 	if(rule.match_type != "fallback")
 	{
+		var record_str = rule.record_require == "1" ? "true" : "false";
+		record_str += "，共 " + rule.record_num + " 条";
+		create_rule_body_item("记录消息", record_str).appendTo(rule_body);
+
 		if(rule.match_require == undefined)
 			rule.match_require = 1;
 		create_rule_body_item("需要匹配次数",
@@ -282,6 +282,7 @@ function create_rule_modify(wrap, rule)
 	var rule_name_wrap = create_rule_modify_input(
 		"规则名称", rule.rule_name, event_rename_rule);
 	rule_name_wrap.children().first().css("float", "left");
+	rule_name_wrap.children().first().height(39);
 
 	// 添加删除规则按钮
 	var rule_remove = $("<div></div>");
@@ -298,11 +299,14 @@ function create_rule_modify(wrap, rule)
 	// 匹配次数区域
 	var rule_match_req = create_rule_modify_input(
 		"需要匹配次数", rule.match_require, event_match_require_set);
-	rule_match_req.find("input[type=text]").keyup(limit_input_number);
+	rule_match_req.find("input[type=text]").keypress(limit_input_number);
 	rule_modify.append(rule_match_req);
 
 	// 消息记录区域
-	create_rule_modify_record(rule_modify, rule.record_require == "1");
+	if(rule.match_type != "fallback")
+	{
+		create_rule_modify_record(rule_modify, rule.record_require == 1); 
+	}
 
 	// 回复时间类型
 	create_rule_modify_time(rule_modify, rule.time_type, rule.time_str);
@@ -319,6 +323,21 @@ function create_rule_modify(wrap, rule)
 		rule.reply, 'reply', "回复");
 	rule_modify.children().last().addClass("head_check");
 	check_ul_border(rule_modify.children().last());
+
+	if(rule.match_type != "fallback")
+	{
+		if(rule.reply_all == undefined)
+			rule.reply_all = 0;
+		var reply_op = rule_modify.children()
+			.last().prev().children(".oper");
+		var reply_all = $("<input type=\"checkbox\"/>");
+		reply_all.css("vertical-align", "middle");
+		reply_all.change(event_set_reply_all);
+		if(rule.reply_all == 1)
+			reply_all.attr("checked", true);
+		$("<span></span>").text("回复全部").prependTo(reply_op);
+		reply_op.prepend(reply_all);
+	}
 
 	wrap.append(rule_modify);
 }
@@ -396,7 +415,7 @@ function create_rule_modify_head(title)
 	head_oper.append(oper_link);
 	head.append(head_oper);
 
-	return { head : head, oper : oper_link };
+	return { head : head, info : head_info, oper : oper_link };
 }
 
 function create_rule_modify_content(wrap, content, type, title)
@@ -458,18 +477,6 @@ function create_time_li(head, time_type, time_str)
 	item.append(oper);
 
 	return $("<li></li>").data("time_str", time_str).append(item);
-}
-
-function create_rule_modify_match_num(wrap, match_require)
-{
-	var head = create_rule_modify_head("匹配");
-	if(record_require)
-		head.oper.text("取消记录");
-	else head.oper.text("设置记录");
-	head.oper.data("record_require", record_require);
-	head.oper.click(event_set_record(head.head));
-
-	wrap.append(head.head);
 }
 
 function create_rule_modify_record(wrap, record_require)
@@ -870,6 +877,28 @@ function event_show_record()
 					.addClass("record_from")
 					.appendTo(elem);
 
+				$("<a></a>")
+					.text("×")
+					.attr("title", "删除")
+					.attr("href", "javascript:;")
+					.addClass("close_a")
+					.click( function(id, elem) {
+						return function() {
+							$.post("../text_reply_oper.php?action="
+								+ "clear_rule_record_by_id", 
+								{ rid: rid,
+								  record_id: id, 
+								  uid: global_uid },
+								function(data) {
+									if(!check_status(data.status))
+										return false;
+									elem.parent().fadeOut( function() {
+										$(this).remove();
+									} );
+								}, "json");
+						};
+					}(data[i].index, elem)).appendTo(elem);
+
 				var content = data[i].content;
 				var break_str = false;
 				if(content.length > 250)
@@ -888,7 +917,9 @@ function event_show_record()
 					var link = $("<a></a>");
 					link.data("content", encode_html(data[i].content));
 					link.attr("href", "javascript:;");
+					link.attr("title", "显示全部");
 					link.text("...");
+					link.addClass("close_a");
 					link.click( function() {
 						var content = $(this).data("content");
 						$(this).parent().fadeOut( function() {
@@ -1121,6 +1152,28 @@ function event_match_require_set(event)
 			th.fadeIn();
 		}, "json");
 	return true;
+}
+
+function event_set_reply_all()
+{
+	var rid = find_wrap($(this)).data("rid");
+	var checked = $(this).attr("checked");
+	if(checked == undefined)
+		checked = 0;
+	else if(checked == true || checked == "checked")
+		checked = 1;
+	var th = $(this);
+	$.post("../text_reply_oper.php?action=set_reply_all", 
+		{ rid : rid, 
+		  reply_all : checked,
+		  uid : global_uid }, function(data) {
+			if(!check_status(data.status))
+				return;
+			th.fadeOut();
+			th.next().fadeOut();
+			th.fadeIn();
+			th.next().fadeIn();
+		}, "json");
 }
 
 function confirm_dialog(width, title, elem, callback)

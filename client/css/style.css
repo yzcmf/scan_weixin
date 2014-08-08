@@ -8,8 +8,8 @@
 body {
 	font-size: 14px;
 	color: #222;
-	font-family: "WenQuanYi Zen Hei", "Helvetica Neue", "Hiragino Sans GB",
-		"Microsoft YaHei", "微软雅黑", "黑体", Arial, sans-serif;
+	font-family:  "Helvetica Neue", "Hiragino Sans GB", "Microsoft YaHei",
+		"微软雅黑", "WenQuanYi Zen Hei", "黑体", Arial, sans-serif;
 }
 
 ul, ol {
@@ -18,7 +18,7 @@ ul, ol {
 }
 
 a {
-	outline: none;
+	outline: medium none;
 }
 
 .jsbtn {
@@ -29,7 +29,7 @@ a {
 
 	border: 0px;
 	border-radius: 4px;
-	outline: 0px;
+	outline: medium none;
 	font-size: 14px;
 
 	overflow: visible;
@@ -51,4 +51,14 @@ a {
 	background-color: #33a550;
 	border: #33a550;
 	color: #fff;
+}
+
+.close_a {
+	font-size: 14px;
+	text-decoration: none;
+	color: #cacaca;
+}
+
+.close_a:hover {
+	color: #e60012;
 }

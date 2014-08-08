@@ -4,6 +4,15 @@ require_once('class_database.php');
 require_once('function.php');
 require_once('response_fallback.php');
 
+function scan_check_reply_all($rule_id)
+{
+	global $wx;
+	return $wx->get_result(
+		"SELECT `reply_value` FROM `reply_meta`
+		 WHERE `reply_key` = 'reply_all'
+		   AND `id` = $rule_id");
+}
+
 function scan_wx_response_full_match($content, $from_user, $uid)
 {
 	global $wx;
@@ -39,6 +48,8 @@ function scan_wx_response_full_match($content, $from_user, $uid)
 			   AND `reply_key` = 'reply'");
 
 		$wx->record_message($rule_id, $from_user, $content);
+		if(scan_check_reply_all($rule_id))
+			return scan_select_all($result);
 		$reply_id = scan_select_from_result($result);
 		if($reply_id === false) return false;
 		return $wx->get_result(
@@ -127,6 +138,13 @@ function scan_wx_response_sub_match($content, $from_user, $uid)
 	if(count($ret) == 0) return false;
 	$index = rand(0, count($ret) - 1);
 	$wx->record_message($ret[$index][0], $from_user, $content);
+	$rule_id = $ret[$index][0];
+	if(scan_check_reply_all($rule_id))
+	{
+		return scan_select_all($wx->query(
+			"SELECT `reply_value` FROM `reply_meta`
+			 WHERE `id` = $rule_id AND `reply_key` = 'reply'"));
+	}
 	return $ret[$index][1];
 }
 

@@ -206,6 +206,43 @@ case 'set_rule_record':
 		scan_error_exit(SCAN_WX_STATUS_ERROR);
 	scan_error_exit($wx->set_rule_record(
 		$_POST['rid'], $_POST['record_require'], $uid));
+case 'clear_rule_record_by_time':
+/* action = 'clear_rule_record_by_time'
+ * @brief 删除指定时间之前的规则记录
+ * @param rid        规则的 ID 
+ * @param clear_all  如果不为1，不需要指定下面的内容，清除所有记录
+ * @param year, month, day, hour, minute, second */
+	if(!isset($_POST['rid']) || !isset($_POST['clear_all']))
+		scan_error_exit(SCAN_WX_STATUS_ERROR);
+	$rid = $_POST['rid'];
+	$clear_all = intval($_POST['clear_all'], 10);
+	if($clear_all == 1)
+	{
+		if(!isset($_POST['year']) || !isset($_POST['month'])
+		|| !isset($_POST['day']) || !isset($_POST['hour'])
+		|| !isset($_POST['minute']) || !isset($_POST['second']))
+			scan_error_exit(SCAN_WX_STATUS_ERROR);
+		$time = $_POST['year'] . '-' 
+			  . $_POST['month'] . '-'
+			  . $_POST['day'] . ' '
+			  . $_POST['hour'] . ':'
+			  . $_POST['minute'] . ':'
+			  . $_POST['second'];
+		scan_error_exit($wx->clear_rule_record($rid, $time, true, $uid));
+	} else {
+		scan_error_exit($wx->clear_rule_record($rid, -1, true, $uid));
+	}
+	break;
+case 'clear_rule_record_by_id':
+/* action = 'clear_rule_record_by_id'
+ * @brief 删除指定规则记录
+ * @param rid        规则的 ID 
+ * @param record_id  记录的 ID */
+	if(!isset($_POST['rid']) || !isset($_POST['record_id']))
+		scan_error_exit(SCAN_WX_STATUS_ERROR);
+	scan_error_exit($wx->clear_rule_record(
+		$_POST['rid'], $_POST['record_id'], false, $uid));
+	break;
 case 'set_match_require':
 /* action = 'set_match_require'
  * @brief 设置最少需要匹配的关键字数
@@ -218,6 +255,18 @@ case 'set_match_require':
 		scan_error_exit(SCAN_WX_STATUS_ERROR);
 	scan_error_exit($wx->update_meta_public(
 		$_POST['rid'], 'match_require', $match_require, $uid));
+case 'set_reply_all':
+/* action = 'set_reply_all'
+ * @brief 设置是否全部回复
+ * @param rid         规则的 ID 
+ * @param reply_all   是否全部回复 */
+	if(!isset($_POST['rid']) || !isset($_POST['reply_all']))
+		scan_error_exit(SCAN_WX_STATUS_ERROR);
+	$reply_all = intval($_POST['reply_all'], 10);
+	if($reply_all) $reply_all = 1;
+	else $reply_all = 0;
+	scan_error_exit($wx->update_meta_public(
+		$_POST['rid'], 'reply_all', $reply_all, $uid));
 default:
 	scan_error_exit(SCAN_WX_STATUS_ERROR);
 }
