@@ -1,7 +1,7 @@
 var flush_count = 0;
 var global_uid = -1;
 $(document).ready( function() {
-	$.getJSON("../account.php?action=get_user_info", 
+	$.getJSON("account?action=get_user_info", 
 		function(data) {
 			if(data.status != SCAN_WX_STATUS_SUCCESS)
 				window.open("login.php", "_self");
@@ -18,7 +18,7 @@ $(document).ready( function() {
 		} );
 
 	$("#rule_logout").click( function() {
-		$.getJSON("../account.php?action=logout",
+		$.getJSON("account?action=logout",
 			{}, function(data) {
 				window.open("login.php", "_self");
 			} );
@@ -47,7 +47,7 @@ $(document).ready( function() {
 			return;
 		$(this).data("running", true);
 		var rtemp;
-		$.post("../text_reply_oper.php?action=get_all_rules", 
+		$.post("oper?action=get_all_rules", 
 			{ uid : global_uid },
 			function(rules) {
 				++flush_count;
@@ -65,7 +65,7 @@ $(document).ready( function() {
 		} );
 	} );
 
-	$.post("../text_reply_oper.php?action=get_all_rules", 
+	$.post("oper?action=get_all_rules", 
 		{ uid : global_uid },
 		function(rules) {
 			if(!check_status(rules['status']))
@@ -108,7 +108,7 @@ function create_single_rule(rule_num, rule_info)
 	wrap.addClass("rule_wrap_item");
 
 	create_rule_head(wrap, rule_num, rule_info);
-	$.post("../text_reply_oper.php?action=get_rule_info", 
+	$.post("oper?action=get_rule_info", 
 		{ rid : rule_info.rid, uid : global_uid },
 		function(wrap) {
 			return function(rule) {
@@ -544,7 +544,7 @@ function event_rename_rule(event)
 		return;
 	var th = $(this);
 	var new_rule_name = th.val();
-	$.post("../text_reply_oper.php?action=change_rule_name", 
+	$.post("oper?action=change_rule_name", 
 		{ rid : find_wrap(th).data("rid"), 
 		  rule_name_new : new_rule_name, 
 		  uid : global_uid }, 
@@ -568,7 +568,7 @@ function event_modify_content_solve(content, elem, title)
 		return false;
 	}
 
-	$.post("../text_reply_oper.php?action=update_content", 
+	$.post("oper?action=update_content", 
 		{ content_index : meta_id, 
 		  content : new_content,
 		  uid : global_uid }, 
@@ -616,7 +616,7 @@ function event_remove_content(meta_id)
 	return function() {
 		var th = $(this);
 		scan_confirm("真的要删除吗？", function() {
-			$.post("../text_reply_oper.php?action=remove_content", 
+			$.post("oper?action=remove_content", 
 				{ content_index : meta_id, 
 				  uid : global_uid }, 
 				function(data) {
@@ -638,13 +638,13 @@ function event_insert_content_solve(body, elem, type, title)
 		return false;
 	}
 
-	$.post("../text_reply_oper.php?action=insert_" + type,
-		{ rid: rid, value: [value], uid: global_uid }, 
+	$.post("oper?action=insert_" + type,
+		{ rid: rid, value: value, uid: global_uid }, 
 		function(data) {
 			if(!check_status(data.status))
 				return;
 			// 获取新加入元素的 ID 并显示
-			$.post("../text_reply_oper.php?action=get_rule_info", 
+			$.post("oper?action=get_rule_info", 
 				{ rid : rid, uid : global_uid }, 
 				function(data) {
 					if(!check_status(data.status))
@@ -716,7 +716,7 @@ function event_remove_time(head)
 
 		var rid = find_wrap(th).data("rid");
 		scan_confirm("真的要删除吗？", function() {
-			$.post("../text_reply_oper.php?action=remove_reply_time", 
+			$.post("oper?action=remove_reply_time", 
 				{ rid : rid, 
 				  time_str : li.data("time_str"), 
 				  uid : global_uid },
@@ -768,7 +768,7 @@ function event_modify_time(head)
 		confirm_dialog("auto", "修改时间", elem, function() {
 			var time_str = get_time_str(type, elem);
 			if(time_str === false) return false;
-			$.post("../text_reply_oper.php?action=change_reply_time", 
+			$.post("oper?action=change_reply_time", 
 				{ rid : rid, 
 				  time_old : li.data("time_str"),
 				  time_new : time_str,
@@ -797,7 +797,7 @@ function event_reset_time(head)
 		confirm_dialog("auto", "设置时间类型", elem, function() {
 			var type = elem.find("select").val();
 			var rid = find_wrap(head).data("rid");
-			$.post("../text_reply_oper.php?action=set_reply_time", 
+			$.post("oper?action=set_reply_time", 
 				{ rid : rid, 
 				  time_type : type, 
 				  time_str : "",
@@ -830,7 +830,7 @@ function event_set_record(head)
 		var record_require = $(this).data("record_require");
 		var rid = find_wrap(head).data("rid");
 		var th = $(this);
-		$.post("../text_reply_oper.php?action=set_rule_record", 
+		$.post("oper?action=set_rule_record", 
 			{ rid: rid, 
 			  record_require: record_require ? "0" : "1",
 			  uid: global_uid }, 
@@ -852,7 +852,7 @@ function event_set_record(head)
 function event_show_record()
 {
 	var rid = find_wrap($(this)).data("rid");
-	$.post("../text_reply_oper.php?action=get_rule_record", 
+	$.post("oper?action=get_rule_record", 
 		{ rid : rid, uid : global_uid }, function(data) {
 			if(!check_status(data.status))
 				return;
@@ -884,7 +884,7 @@ function event_show_record()
 					.addClass("close_a")
 					.click( function(id, elem) {
 						return function() {
-							$.post("../text_reply_oper.php?action="
+							$.post("oper?action="
 								+ "clear_rule_record_by_id", 
 								{ rid: rid,
 								  record_id: id, 
@@ -998,7 +998,7 @@ function event_add_time_solve(body, elem, type)
 	if(time_str === false) return false;
 	var rid = find_wrap(body).data("rid");
 	var list = body.find("ul");
-	$.post("../text_reply_oper.php?action=insert_reply_time", 
+	$.post("oper?action=insert_reply_time", 
 		{ rid : rid, time_str : time_str, uid : global_uid }, 
 		function(data) {
 			if(!check_status(data.status))
@@ -1036,7 +1036,7 @@ function event_change_passwd(elem)
 		return false;
 	}
 
-	$.post("../account.php?action=change_password", 
+	$.post("account?action=change_password", 
 		{ old_password : $.md5(old_passwd), 
 		  new_password : $.md5(new_passwd), 
 		  uid : global_uid }, 
@@ -1056,7 +1056,7 @@ function event_remove_rule(rid, wrap)
 	return function() {
 		scan_confirm("删除后不可恢复<br />真的要删除规则吗？",  
 			function() {
-				$.post("../text_reply_oper.php?action=remove",  
+				$.post("oper?action=remove",  
 					{ rid : rid, uid : global_uid }, function(data) {
 						if(!check_status(data.status))
 							return;
@@ -1078,14 +1078,14 @@ function event_add_rule(elem, rule_num)
 		return false;
 	}
 
-	$.post("../text_reply_oper.php?action=insert", 
+	$.post("oper?action=insert", 
 		{ rule_name : rule_name, 
 		  match_type : elem.children(".dlg_match_type").val(),
 		  uid : global_uid }, 
 		function(data) {
 			if(!check_status(data.status))
 				return;
-			$.post("../text_reply_oper.php?action=get_all_rules", 
+			$.post("oper?action=get_all_rules", 
 				{ uid : global_uid },
 				function(rules) {
 					if(!check_status(rules.status))
@@ -1120,7 +1120,7 @@ function event_register_user(elem)
 	}
 
 	var password = elem.children(".dlg_password").val();
-	$.post("../account.php?action=register", 
+	$.post("account?action=register", 
 		{ username : username, password : $.md5(password) }, 
 		function(data) {
 			if(!check_status(data.status))
@@ -1142,7 +1142,7 @@ function event_match_require_set(event)
 	}
 
 	var th = $(this);
-	$.post("../text_reply_oper.php?action=set_match_require", 
+	$.post("oper?action=set_match_require", 
 		{ rid: find_wrap($(this)).data("rid"), 
 		  match_require: match_require, 
 		  uid: global_uid }, function(data) {
@@ -1163,7 +1163,7 @@ function event_set_reply_all()
 	else if(checked == true || checked == "checked")
 		checked = 1;
 	var th = $(this);
-	$.post("../text_reply_oper.php?action=set_reply_all", 
+	$.post("oper?action=set_reply_all", 
 		{ rid : rid, 
 		  reply_all : checked,
 		  uid : global_uid }, function(data) {

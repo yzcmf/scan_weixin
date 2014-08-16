@@ -4,10 +4,10 @@ import time
 import xml.dom.minidom
 
 import tornado.web
-import server.response.text as response_text
-import server.response.fallback as response_fallback
-import server.response.script as response_script
-import server.config as config
+import scanwx.response.text as response_text
+import scanwx.response.fallback as response_fallback
+import scanwx.response.script as response_script
+import scanwx.config as config
 
 class handler(tornado.web.RequestHandler):
 	def valid(self):
@@ -57,6 +57,7 @@ class handler(tornado.web.RequestHandler):
 						</xml>"
 
 		db = self.application.db
+		db.commit()
 		if not content:
 			reply = response_fallback.response(db, content, from_user)
 		else:

@@ -11,6 +11,8 @@ username = 'scan_weixin'
 password = '2mLbbSjQveZ5rw9t'
 #Token
 token = '4efee8b32fdd908988f44bcde6c50998'
+#cookie 密钥
+cookie_secret = 'ee32a1a78d80ed6507970e114189c77d'
 
 #密码salt
 password_salt = '2398fhadjvbqfihef'

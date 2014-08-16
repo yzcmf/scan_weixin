@@ -1,6 +1,6 @@
 import random
-import server.response.fallback as fallback
-from server.response import *
+import scanwx.response.fallback as fallback
+from scanwx.response import *
 
 def full_match(db, content, from_user, uid):
 	sql = "SELECT DISTINCT(m.id)         \

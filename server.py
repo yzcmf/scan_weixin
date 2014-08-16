@@ -2,24 +2,46 @@
 
 import tornado.web
 import tornado.ioloop
-import server.database
-import server.server
+import tornado.httpserver
+import scanwx.database
+import scanwx.server
+import scanwx.client
+import scanwx.client.account
+import scanwx.client.oper
+import scanwx.client.login
+import scanwx.client.rule
+import scanwx.config as config
 import sys
 
 class scan_wx_application(tornado.web.Application):
 	def __init__(self):
-		self.db = server.database.database()
+		self.db = scanwx.database.database()
 		self.db.connect()
 
 		handlers = [
-			(r'/server', server.server.handler)
+			(r'/server', scanwx.server.handler),
+			(r'/client/account', scanwx.client.account.handler),
+			(r'/client/oper', scanwx.client.oper.handler),
+			(r'/client/?', scanwx.client.handler),
+			(r'/client/login.html', scanwx.client.login.handler),
+			(r'/client/rule.html', scanwx.client.rule.handler),
+			(r'/client/(.*\.(js|css|png))',
+				tornado.web.StaticFileHandler,
+				{ 'path': './client' })
 		]
 
-		super(scan_wx_application, self).__init__(
-			handlers,
-			cookie_secret = 'ee32a1a78d80ed6507970e114189c77d')
+		settings = dict(
+			cookie_secret = config.cookie_secret,
+			compress_response = { 'gzip': 6 },
+			gzip = True
+		)
 
-app = scan_wx_application()
-app.listen(int(sys.argv[1]))
-tornado.ioloop.IOLoop.instance().start()
+		super(scan_wx_application, self).__init__(handlers, **settings)
+
+if __name__ == '__main__':
+	app = scan_wx_application()
+	port = int(sys.argv[1])
+	http_server = tornado.httpserver.HTTPServer(app, xheaders = True)
+	http_server.listen(port)
+	tornado.ioloop.IOLoop.instance().start()
 

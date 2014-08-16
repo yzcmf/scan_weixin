@@ -1,6 +1,6 @@
 import time
 import random
-import server.config as config
+import scanwx.config as config
 
 def get_meta(db, rid, meta):
 	return db.get_result(

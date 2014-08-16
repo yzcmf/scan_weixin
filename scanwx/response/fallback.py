@@ -1,5 +1,5 @@
 import random
-from server.response import check_time
+from scanwx.response import check_time
 
 def response(db, content, from_user, uid = 1):
 	uid = int(uid)

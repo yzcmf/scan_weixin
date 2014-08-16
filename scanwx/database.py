@@ -1,5 +1,5 @@
 import pymysql
-import server.config as config
+import scanwx.config as config
 
 class database:
 	def connect(self):
