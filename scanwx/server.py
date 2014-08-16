@@ -8,6 +8,7 @@ import scanwx.response.text as response_text
 import scanwx.response.fallback as response_fallback
 import scanwx.response.script as response_script
 import scanwx.config as config
+import scanwx.parser
 
 class handler(tornado.web.RequestHandler):
 	def valid(self):
@@ -47,15 +48,6 @@ class handler(tornado.web.RequestHandler):
 		from_user = data['FromUserName']
 		to_user = data['ToUserName']
 
-		text_template = "<xml> \
-						<ToUserName><![CDATA[%s]]></ToUserName> \
-						<FromUserName><![CDATA[%s]]></FromUserName> \
-						<CreateTime>%s</CreateTime> \
-						<MsgType><![CDATA[%s]]></MsgType> \
-						<Content><![CDATA[%s]]></Content> \
-						<FuncFlag>0</FuncFlag> \
-						</xml>"
-
 		db = self.application.db
 		db.commit()
 		if not content:
@@ -66,8 +58,7 @@ class handler(tornado.web.RequestHandler):
 				reply = response_text.response(db, content, from_user)
 			if reply is None or not reply.strip():
 				reply = response_fallback.response(db, content, from_user)
-
 		if not reply: reply = ''
-		response = text_template % (from_user,
-			to_user, int(time.time()), 'text', reply)
+		# 判断回复类型
+		response = scanwx.parser.parse(from_user, to_user, reply)
 		self.write(response)
