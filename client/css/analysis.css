@@ -1,0 +1,14 @@
+
+.analytics {
+	width: 450px;
+	border: 0px;
+	margin: 10px 25px;
+}
+
+.analytics .light td {
+	border-bottom: 1px dashed #888;
+}
+
+.analytics .light th {
+	border-bottom: 1px dashed #888;
+}

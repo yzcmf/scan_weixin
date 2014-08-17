@@ -12,15 +12,20 @@ import scanwx.parser
 
 class handler(tornado.web.RequestHandler):
 	def valid(self):
-		echo_str = self.get_argument('echostr')
+		try:
+			echo_str = self.get_argument('echostr')
+		except tornado.web.MissingArgumentError:
+			return
+
 		if self.check_signature():
 			self.write(echo_str)
 
 	def check_signature(self):
-		signature = self.get_argument('signature')
-		timestamp = self.get_argument('timestamp')
-		nonce = self.get_argument('nonce')
-		if not nonce or not timestamp or not signature:
+		try:
+			signature = self.get_argument('signature')
+			timestamp = self.get_argument('timestamp')
+			nonce = self.get_argument('nonce')
+		except tornado.web.MissingArgumentError:
 			return False
 
 		token = config.token
@@ -44,6 +49,8 @@ class handler(tornado.web.RequestHandler):
 		for d in xmldom.documentElement.childNodes:
 			if not d.childNodes: continue
 			data[d.nodeName] = d.childNodes[0].nodeValue
+		if data['MsgType'] != 'text':
+			return
 		content = data['Content'].strip()
 		from_user = data['FromUserName']
 		to_user = data['ToUserName']

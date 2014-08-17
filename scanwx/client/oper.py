@@ -372,7 +372,7 @@ class handler(scanwx.client.handler):
 			return config.status_forbidden
 		self.db.query('DELETE FROM reply_meta WHERE id = %s', [rid])
 		self.db.query('DELETE FROM reply_map WHERE id = %s', [rid])
-		self.db.query('DELETE FROM record WHERE id = %s', [rid])
+		self.db.query('DELETE FROM record WHERE rule_id = %s', [rid])
 		return config.status_success
 
 	def __get_all_rules(self, uid):

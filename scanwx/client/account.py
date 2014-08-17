@@ -16,22 +16,22 @@ class handler(scanwx.client.handler):
 		except MissingArgumentError:
 			self.exit_with(config.status_error)
 
-		db = self.application.db
-		db.commit()
+		self.db = self.application.db
+		self.db.commit()
 		if action == 'login':
-			self.__login(db)
+			self.__login()
 		elif action == 'logout':
 			self.set_secure_cookie('user', '')
 			self.set_secure_cookie('login_time', '')
 		elif action == 'register':
-			self.__register(db)
+			self.__register()
 		elif action == 'get_user_info':
-			self.__get_user_info(db)
+			self.__get_user_info()
 		elif action == 'change_password':
-			self.__change_password(db)
+			self.__change_password()
 		else: self.exit_with(config.status_error)
 
-	def __login(self, db):
+	def __login(self):
 		'''
 		用于登陆管理系统
 
@@ -44,7 +44,7 @@ class handler(scanwx.client.handler):
 		except MissingArgumentError:
 			self.exit_with(config.status_error)
 		password = self.__encode_passwd(password)
-		user_info = db.get_row_dict('SELECT * \
+		user_info = self.db.get_row_dict('SELECT * \
 			FROM user WHERE username = %s', [username])
 		if user_info is None or user_info['password'] != password:
 			self.exit_with(config.status_error)
@@ -52,7 +52,7 @@ class handler(scanwx.client.handler):
 		self.set_secure_cookie('login_time', str(time.time()))
 		self.exit_with(config.status_success)
 
-	def __get_user_info(self, db):
+	def __get_user_info(self):
 		'''
 		用于获取当前登陆用户的信息
 		'''
@@ -61,7 +61,7 @@ class handler(scanwx.client.handler):
 			self.exit_with(config.status_nologin)
 		self.exit_with(config.status_success, info)
 
-	def __change_password(self, db):
+	def __change_password(self):
 		'''
 		用于修改密码
 
@@ -92,15 +92,15 @@ class handler(scanwx.client.handler):
 
 		password_old = self.__encode_passwd(password_old)
 		password_new = self.__encode_passwd(password_new)
-		info = db.get_row_dict('SELECT * FROM user WHERE uid = %s', [uid])
+		info = self.db.get_row_dict('SELECT * FROM user WHERE uid = %s', [uid])
 		if not is_admin and password_old != info['password']:
 			self.exit_with(config.status_forbidden)
 
-		db.query('UPDATE user SET password = %s \
+		self.db.query('UPDATE user SET password = %s \
 			WHERE uid = %s', [password_new, uid])
 		self.exit_with(config.status_success)
 
-	def __register(self, db):
+	def __register(self):
 		'''
 		用于注册账户（管理员可以）
 
@@ -118,11 +118,11 @@ class handler(scanwx.client.handler):
 			self.exit_with(config.status_error)
 
 		password = self.__encode_passwd(password)
-		if db.get_result('SELECT uid FROM user \
+		if self.db.get_result('SELECT uid FROM user \
 			WHERE username = %s', [username]) is not None:
 			self.exit_with(config.status_error)
 
-		db.query('INSERT INTO user (username, password, role) \
+		self.db.query('INSERT INTO user (username, password, role) \
 			VALUES (%s, %s, %s)', [username, password, 'common'])
 		self.exit_with(config.status_success)
 

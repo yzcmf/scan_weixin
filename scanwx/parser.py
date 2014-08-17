@@ -2,7 +2,7 @@
 import re
 import time
 
-_regex_extract = re.compile(r'\[\[\[((\s|.)+?)\]\]\]')
+_regex_extract = re.compile(r'\[{3}((\s|.)+?)\]{3}')
 _regex_parse = re.compile(r'([a-z]+)="(.*?)"')
 _text_template = '''
 			<xml>
@@ -76,13 +76,15 @@ def _parse(content):
 	if not command:
 		return ('text', raw_content)
 	rtype = command.group(1)
-	if rtype not in ('news'):
+	if rtype not in ('news', 'text'):
 		return ('text', raw_content)
 	content = content[command.end():].lstrip()
 
 	# 解析回复内容
 	if rtype == 'news':
 		return (rtype, _parse_news(content))
+	elif rtype == 'text':
+		return (rtype, content)
 
 def parse(to_user, from_user, content):
 	rtype, resp = _parse(content)

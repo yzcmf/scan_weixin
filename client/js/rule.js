@@ -934,6 +934,20 @@ function event_show_record()
 			}
 
 			wrap.append(list);
+
+			btn = {
+				vote: {
+					type: "green",
+					val: "分析投票",
+					click: function(d) {
+						return function() {
+							analysis_vote(d);
+							return false;
+						}
+					}(data)
+				}
+			};
+
 			$.dialog( {
 				title: "消息记录",
 				padding: "0px",
@@ -941,7 +955,8 @@ function event_show_record()
 				lock: true,
 				esc: false,
 				width: 500,
-				height: 400 } );
+				height: 400,
+				btn: btn } );
 		}, "json");
 }
 
