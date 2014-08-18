@@ -42,8 +42,15 @@ class handler(tornado.web.RequestHandler):
 		self.set_header('Content-Type', 'application/json')
 		self.write(json.dumps(args))
 		self.finish()
-		self.db.commit()
 		raise tornado.web.Finish()
+
+	def on_finish(self):
+		self.db.commit()
+		self.db.close()
+
+	def prepare(self):
+		self.db = self.application.db
+		self.db.connect()
 
 	def get(self):
 		if self.get_current_user() is None:

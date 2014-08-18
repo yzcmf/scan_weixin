@@ -56,7 +56,7 @@ class handler(tornado.web.RequestHandler):
 		to_user = data['ToUserName']
 
 		db = self.application.db
-		db.commit()
+		db.connect()
 		if not content:
 			reply = response_fallback.response(db, content, from_user)
 		else:
@@ -66,6 +66,8 @@ class handler(tornado.web.RequestHandler):
 			if reply is None or not reply.strip():
 				reply = response_fallback.response(db, content, from_user)
 		if not reply: reply = ''
+		db.commit()
+		db.close()
 		# 判断回复类型
 		response = scanwx.parser.parse(from_user, to_user, reply)
 		self.write(response)

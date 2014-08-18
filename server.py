@@ -16,8 +16,6 @@ import sys
 class scan_wx_application(tornado.web.Application):
 	def __init__(self):
 		self.db = scanwx.database.database()
-		self.db.connect()
-
 		handlers = [
 			(r'/server', scanwx.server.handler),
 			(r'/client/account', scanwx.client.account.handler),
@@ -41,7 +39,6 @@ class scan_wx_application(tornado.web.Application):
 if __name__ == '__main__':
 	app = scan_wx_application()
 	port = int(sys.argv[1])
-	http_server = tornado.httpserver.HTTPServer(app, xheaders = True)
-	http_server.listen(port)
+	app.listen(app)
 	tornado.ioloop.IOLoop.instance().start()
 

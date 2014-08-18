@@ -61,8 +61,6 @@ class handler(scanwx.client.handler):
 		if uid != user_info['uid'] and user_info['role'] != 'administrator':
 			self.exit_with(config.status_forbidden)
 
-		self.db = self.application.db
-		self.db.commit()
 		if action == 'insert':
 			'''
 			插入规则

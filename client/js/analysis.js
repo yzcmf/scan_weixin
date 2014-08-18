@@ -14,8 +14,9 @@ function analysis_vote_solve(data, limit)
 				size[from] = 0;
 			}
 
+			if(map[from][data[i].content] == undefined)
+				++size[from];
 			map[from][data[i].content] = 1;
-			++size[from];
 		}
 	}
 
