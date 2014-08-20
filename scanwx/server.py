@@ -61,10 +61,11 @@ class handler(tornado.web.RequestHandler):
 			ret = response_fallback.response(db, content, from_user)
 		else:
 			ret = response_script.response(db, content, from_user)
-			if ret[1] is None:
+			if ret is None or ret[1] is None:
 				ret = response_text.response(db, content, from_user)
-			if ret[1] is None or not ret[1].strip():
+			if ret is None or ret[1] is None or not ret[1].strip():
 				ret = response_fallback.response(db, content, from_user)
+		if ret is None: ret = (None) * 3
 		match_type, reply, info = ret
 		if not reply: reply = ''
 		db.commit()

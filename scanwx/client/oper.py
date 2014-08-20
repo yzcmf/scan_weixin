@@ -345,7 +345,7 @@ class handler(scanwx.client.handler):
 		rule_type 规则类型
 		uid       用户 ID
 		'''
-		allow_rule_type = ('fallback',
+		allow_rule_type = ('fallback', 'forward',
 			'full_match', 'sub_match', 'regex_match')
 		if rule_type not in allow_rule_type:
 			return config.status_error

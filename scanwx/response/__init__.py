@@ -11,18 +11,6 @@ def get_meta(db, rid, meta):
 def check_meta(db, rid, meta):
 	return get_meta(db, rid, meta) == '1'
 
-def check_uid(db, content):
-	sql = "SELECT uid, user_value \
-		   FROM user_meta \
-		   WHERE user_key = 'keyword'"
-	candidate = []
-	for row in db.query_list(sql):
-		if content.find(row[1]) == 0:
-			candidate.append(row[0])
-
-	if not candidate: return None
-	return random.choice(candidate)
-
 def time_in_range(time_type, time_str):
 	now = time.localtime()
 	t1 = list(map(int, time_str[0].split(':')))
@@ -78,6 +66,20 @@ def check_time(db, rid):
 		if time_in_range(time_type, t.split(',')):
 			return True
 	return False
+
+def check_uid(db, content):
+	sql = "SELECT r.id, r.uid, m.reply_value FROM reply_meta AS m \
+		   INNER JOIN reply_map AS r ON m.id = r.id \
+		   WHERE m.reply_key = 'keyword' AND r.type = 'forward'"
+	candidate = []
+	for row in db.query_list(sql):
+		if row[1] in candidate:
+			continue
+		if content.startswith(row[2]) and check_time(db, row[0]):
+			candidate.append(row[1])
+
+	if not candidate: return None
+	return random.choice(candidate)
 
 def record_message(db, rid, from_user, content):
 	if not check_meta(db, rid, 'record_require'):

@@ -114,15 +114,15 @@ def response(db, content, from_user):
 	if uid is None: uid = -1
 	# 检测全匹配
 	result = full_match(db, content, from_user, uid)
-	if result[1]: return result
+	if result and result[1]: return result
 	# 检测部分匹配
 	result = rule_match(db, 'sub_match',
 		sub_match_test, content, from_user, uid)
-	if result[1]: return result
+	if result and result[1]: return result
 	# 检测正则表达式规则
 	result = rule_match(db, 'regex_match',
 		regex_match_test, content, from_user, uid)
-	if result[1]: return result
+	if result and result[1]: return result
 	# 检测 fallback
 	if uid != -1:
 		return fallback.response(db, content, from_user, uid)

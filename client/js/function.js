@@ -61,6 +61,8 @@ function map_reply_type(type)
 		return "完全匹配";
 	case "regex_match":
 		return "正则表达式";
+	case "forward":
+		return "forward";
 	default:
 		return "fallback";
 	}

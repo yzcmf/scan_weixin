@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS `record` (
 
 CREATE TABLE IF NOT EXISTS `reply_map` (
 `id` int(11) NOT NULL,
-  `type` enum('regex_match','full_match','sub_match','fallback') NOT NULL,
+  `type` enum('forward', 'regex_match','full_match','sub_match','fallback') NOT NULL,
   `rule_name` text NOT NULL,
   `uid` int(11) NOT NULL
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0 ;
@@ -76,17 +76,6 @@ CREATE TABLE IF NOT EXISTS `user` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `user_meta`
---
-
-CREATE TABLE IF NOT EXISTS `user_meta` (
-`index_key` int(11) NOT NULL,
-  `uid` int(11) NOT NULL,
-  `user_key` text NOT NULL,
-  `user_value` text NOT NULL
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0 ;
-
---
 -- Indexes for dumped tables
 --
 
@@ -115,12 +104,6 @@ ALTER TABLE `user`
  ADD PRIMARY KEY (`uid`);
 
 --
--- Indexes for table `user_meta`
---
-ALTER TABLE `user_meta`
- ADD PRIMARY KEY (`index_key`);
-
---
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -144,11 +127,6 @@ MODIFY `index_key` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=0;
 --
 ALTER TABLE `user`
 MODIFY `uid` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=0;
---
--- AUTO_INCREMENT for table `user_meta`
---
-ALTER TABLE `user_meta`
-MODIFY `index_key` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=0;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

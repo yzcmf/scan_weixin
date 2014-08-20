@@ -224,7 +224,7 @@ function create_rule_body(wrap, rule)
 	create_rule_body_item("回复类型", 
 		map_reply_type(rule.match_type)).appendTo(rule_body);
 
-	if(rule.match_type != "fallback")
+	if(rule.match_type != "fallback" && rule.match_type != "forward")
 	{
 		var record_str = rule.record_require == "1" ? "true" : "false";
 		record_str += "，共 " + rule.record_num + " 条";
@@ -297,16 +297,18 @@ function create_rule_modify(wrap, rule)
 	rule_modify.append(rule_name_wrap);
 
 	// 匹配次数区域
-	var rule_match_req = create_rule_modify_input(
-		"需要匹配次数", rule.match_require, event_match_require_set);
-	rule_match_req.find("input[type=text]").keypress(limit_input_number);
-	rule_modify.append(rule_match_req);
+	if(rule.match_type != "forward")
+	{
+		var rule_match_req = create_rule_modify_input(
+			"需要匹配次数", rule.match_require, event_match_require_set);
+		rule_match_req.find("input[type=text]")
+			.keypress(limit_input_number);
+		rule_modify.append(rule_match_req);
+	}
 
 	// 消息记录区域
-	if(rule.match_type != "fallback")
-	{
+	if(rule.match_type != "fallback" && rule.match_type != "forward")
 		create_rule_modify_record(rule_modify, rule.record_require == 1); 
-	}
 
 	// 回复时间类型
 	create_rule_modify_time(rule_modify, rule.time_type, rule.time_str);
@@ -319,12 +321,16 @@ function create_rule_modify(wrap, rule)
 	}
 
 	// 回复区域
-	create_rule_modify_content(rule_modify, 
-		rule.reply, 'reply', "回复");
+	if(rule.match_type != "forward")
+	{
+		create_rule_modify_content(rule_modify, 
+			rule.reply, 'reply', "回复");
+	}
+
 	rule_modify.children().last().addClass("head_check");
 	check_ul_border(rule_modify.children().last());
 
-	if(rule.match_type != "fallback")
+	if(rule.match_type != "fallback" && rule.match_type != "forward")
 	{
 		if(rule.reply_all == undefined)
 			rule.reply_all = 0;
