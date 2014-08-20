@@ -1,3 +1,4 @@
+import re
 
 from tornado.web import MissingArgumentError
 import scanwx.client
@@ -143,6 +144,18 @@ class handler(scanwx.client.handler):
 					value = self.get_argument('content')
 				except MissingArgumentError:
 					self.exit_with(config.status_error)
+
+				# 检测正则表达式规则
+				sql = 'SELECT r.type FROM reply_map AS r \
+					   INNER JOIN reply_meta AS m \
+					   ON r.id = m.id AND m.index_key = %s'
+				match_type = self.db.get_result(sql, [content_index])
+				if match_type == 'regex_match':
+					try:
+						re.compile(content)
+					except Exception as e:
+						self.exit_with('语法错误：' + str(e))
+
 				status = self.__update_meta(mid, value, uid)
 			else: status = self.__remove_meta(mid, uid)
 			self.exit_with(status)
@@ -161,9 +174,19 @@ class handler(scanwx.client.handler):
 				self.exit_with(config.status_error)
 			if self.__get_rule_owner(rid) != uid:
 				self.exit_with(config.status_forbidden)
+
 			key_type = 'keyword'
 			if action == 'insert_reply':
 				key_type = 'reply'
+
+			sql = 'SELECT type FROM reply_map WHERE id = %s'
+			match_type = self.db.get_result(sql, [rid])
+			if match_type == 'regex_match' and key_type == 'keyword':
+				try:
+					re.compile(value)
+				except Exception as e:
+					self.exit_with('语法错误：' + str(e))
+
 			self.__insert_meta(rid, key_type, value, uid)
 			self.exit_with(config.status_success)
 		elif action == 'set_reply_time':
@@ -322,10 +345,9 @@ class handler(scanwx.client.handler):
 		rule_type 规则类型
 		uid       用户 ID
 		'''
-		rule = self.__get_rule_info(rule_name, uid)
-		if rule is not None:
-			return config.status_rule_exist
-		if rule_type not in ('fallback', 'full_match', 'sub_match'):
+		allow_rule_type = ('fallback',
+			'full_match', 'sub_match', 'regex_match')
+		if rule_type not in allow_rule_type:
 			return config.status_error
 
 		self.db.query('INSERT INTO reply_map (uid, rule_name, type) \

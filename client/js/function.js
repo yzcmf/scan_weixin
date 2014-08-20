@@ -4,6 +4,7 @@ function scan_alert(title, content)
 {
 	$.dialog( {
 		lock: true,
+		width: 250,
 		content: content,
 		title: title,
 		btn: {
@@ -58,6 +59,8 @@ function map_reply_type(type)
 		return "部分匹配";
 	case "full_match":
 		return "完全匹配";
+	case "regex_match":
+		return "正则表达式";
 	default:
 		return "fallback";
 	}

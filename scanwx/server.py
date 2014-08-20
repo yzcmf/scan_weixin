@@ -58,13 +58,14 @@ class handler(tornado.web.RequestHandler):
 		db = self.application.db
 		db.connect()
 		if not content:
-			reply = response_fallback.response(db, content, from_user)
+			ret = response_fallback.response(db, content, from_user)
 		else:
-			reply = response_script.response(db, content, from_user)
-			if reply is None:
-				reply = response_text.response(db, content, from_user)
-			if reply is None or not reply.strip():
-				reply = response_fallback.response(db, content, from_user)
+			ret = response_script.response(db, content, from_user)
+			if ret[1] is None:
+				ret = response_text.response(db, content, from_user)
+			if ret[1] is None or not ret[1].strip():
+				ret = response_fallback.response(db, content, from_user)
+		match_type, reply, info = ret
 		if not reply: reply = ''
 		db.commit()
 		db.close()

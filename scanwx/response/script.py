@@ -15,5 +15,5 @@ def response(db, content, from_user):
 		if script.check(db, content, from_user):
 			result = script.response(db, content, from_user)
 			if result is not None:
-				return result
+				return ('script', result, None)
 	return None

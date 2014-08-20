@@ -16,4 +16,4 @@ def response(db, content, from_user, uid = 1):
 			candidate.append(row[1])
 
 	if not candidate: return None
-	return random.choice(candidate)
+	return ('fallback', random.choice(candidate), None)

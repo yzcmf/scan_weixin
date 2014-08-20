@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS `record` (
 
 CREATE TABLE IF NOT EXISTS `reply_map` (
 `id` int(11) NOT NULL,
-  `type` enum('php_reply','full_match','sub_match','fallback') NOT NULL,
+  `type` enum('regex_match','full_match','sub_match','fallback') NOT NULL,
   `rule_name` text NOT NULL,
   `uid` int(11) NOT NULL
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0 ;
