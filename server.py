@@ -39,6 +39,6 @@ class scan_wx_application(tornado.web.Application):
 if __name__ == '__main__':
 	app = scan_wx_application()
 	port = int(sys.argv[1])
-	app.listen(app)
+	app.listen(port)
 	tornado.ioloop.IOLoop.instance().start()
 

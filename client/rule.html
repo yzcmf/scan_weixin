@@ -58,10 +58,11 @@
 				请选择你要的类型<br />
 				修改类型会删除该规则当前所有的时间信息<br />
 				<select>
-					<option value="all">all</option>
-					<option value="daily">daily</option>
-					<option value="weekly">weekly</option>
-					<option value="monthly">monthly</option>
+					<option value="all">全部时间</option>
+					<option value="exact">精确时间</option>
+					<option value="daily">每天</option>
+					<option value="weekly">每周</option>
+					<option value="monthly">每月</option>
 				</select>
 			</div>
 			<div class="daily_time_dialog">
@@ -133,6 +134,39 @@
 					<span>结束时间</span>
 					<input type="text" class="lw day" />
 					<span>,</span>
+					<input type="text" class="lw hour" />
+					<span>:</span>
+					<input type="text" class="lw minute" />
+					<span>:</span>
+					<input type="text" class="lw second" />
+				</div>
+			</div>
+			<div class="exact_time_dialog">
+				<div>
+					时间格式是 year-month-day hour:minute:second
+				</div>
+				<div class="dlg_start_time">
+					<span>开始时间</span>
+					<input type="text" class="lw year" />
+					<span>-</span>
+					<input type="text" class="lw month" />
+					<span>-</span>
+					<input type="text" class="lw day" />
+					<span>&nbsp;</span>
+					<input type="text" class="lw hour" />
+					<span>:</span>
+					<input type="text" class="lw minute" />
+					<span>:</span>
+					<input type="text" class="lw second" />
+				</div>
+				<div class="dlg_end_time">
+					<span>开始时间</span>
+					<input type="text" class="lw year" />
+					<span>-</span>
+					<input type="text" class="lw month" />
+					<span>-</span>
+					<input type="text" class="lw day" />
+					<span>&nbsp;</span>
 					<input type="text" class="lw hour" />
 					<span>:</span>
 					<input type="text" class="lw minute" />

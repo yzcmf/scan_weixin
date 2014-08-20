@@ -5,15 +5,13 @@ import scanwx.config as config
 
 def check_time_available(time_type, time_str):
 	' 检测时间是否合法 '
-	def check(time, reach_zero, limit):
+	def check(time, limit):
 		try:
 			time_arr = list(map(int, time.split(':')))
 			if len(time_arr) != len(limit):
 				return False
-			if not reach_zero and time_arr[0] == 0:
-				return False
 			for a, b in zip(time_arr, limit):
-				if a > b: return False
+				if not b[0] <= a <= b[1]: return False
 			return True
 		except:
 			return False
@@ -22,20 +20,20 @@ def check_time_available(time_type, time_str):
 	if not time_str: return True
 	if time_type == config.time_all:
 		return True
-	reach_zero = True
 	if time_type == config.time_daily:
-		limit = [24, 60, 60]
+		limit = [(0, 24), (0, 60), (0, 60)]
 	elif time_type == config.time_weekly:
-		limit = [6, 24, 60, 60]
-	else:
-		limit = [31, 24, 60, 60]
-		reach_zero = False
+		limit = [(0, 6), (0, 24), (0, 60), (0, 60)]
+	elif time_type == config.time_monthly:
+		limit = [(1, 31), (0, 24), (0, 60), (0, 60)]
+	elif time_type == config.time_exact:
+		limit = [(2000, 2037), (1, 12), (1, 31), (0, 24), (0, 60), (0, 60)]
 	for t in time_str.split('|'):
 		j = t.split(',')
 		if len(j) != 2:
 			return False
 		for r in j:
-			if not check(r, reach_zero, limit):
+			if not check(r, limit):
 				return False
 	return True
 
@@ -522,7 +520,7 @@ class handler(scanwx.client.handler):
 		uid       用户 ID
 		'''
 		if time_type not in (config.time_all, config.time_daily,
-			config.time_weekly, config.time_monthly):
+			config.time_weekly, config.time_monthly, config.time_exact):
 			return config.status_error
 		if self.__get_rule_owner(rid) != uid:
 			return config.status_forbidden

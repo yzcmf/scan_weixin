@@ -48,6 +48,10 @@ def time_in_range(time_type, time_str):
 			if ws != we: ts[3:6] = [0, 0, 0]
 		else: return False
 		loop = 60 * 60 * 24
+	elif time_type == config.time_exact:
+		loop = 0
+		ts = t1 + [-1] * 3
+		te = t2 + [-1] * 3
 	else:
 		ts[-3:] = [-1] * 3
 		te[-3:] = [-1] * 3

@@ -4,7 +4,7 @@ $(document).ready( function() {
 	$.getJSON("account?action=get_user_info", 
 		function(data) {
 			if(data.status != SCAN_WX_STATUS_SUCCESS)
-				window.open("login.php", "_self");
+				window.open("login.html", "_self");
 			if(data.role == "administrator")
 			{
 				$("#register_user").show();
@@ -453,10 +453,19 @@ function conv_time_str(time_type, time_str)
 	} else if(time_type == "monthly") {
 		str = str_arr[0].replace(/:/, ", ") + " ~ "
 			+ str_arr[1].replace(/:/, ", ");
-	} else {
+	} else if(time_type == "weekly") {
 		var map = [ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" ];
 		str = map[a1[0]] + ", " + [a1[1], a1[2], a1[3]].join(":") + " ~ "
 			+ map[a2[0]] + ", " + [a2[1], a2[2], a2[3]].join(":");
+	} else {
+		var map = [ "Jan", "Feb", "Mar", "Apr", "May", "June", 
+					"July", "Aug", "Sept", "Oct", "Nov", "Dec" ];
+		var fun = function(v) {
+			return map[v[1]] + " " + v[2] + ", " 
+					+ [v[3], v[4], v[5]].join(":") + ", " + v[0];
+		};
+
+		str = fun(a1) + " ~ " + fun(a2);
 	}
 
 	return str;
@@ -736,7 +745,8 @@ function modify_time_set_str(elem, type, time_str)
 	var a2 = time_arr[1].split(":");
 
 	var base = 0;
-	if(type != "daily") ++base;
+	if(type != "daily") 
+		base += type != 'exact' ? 1 : 3;
 
 	elem.find(".dlg_start_time .hour").val(a1[base]);
 	elem.find(".dlg_start_time .minute").val(a1[base + 1]);
@@ -752,6 +762,13 @@ function modify_time_set_str(elem, type, time_str)
 	} else if(type == "weekly") {
 		elem.find(".dlg_start_time .week").val(a1[0]);
 		elem.find(".dlg_end_time .week").val(a2[0]);
+	} else if(type == "exact") {
+		elem.find(".dlg_start_time .year").val(a1[0]);
+		elem.find(".dlg_start_time .month").val(a1[1]);
+		elem.find(".dlg_start_time .day").val(a1[2]);
+		elem.find(".dlg_end_time .year").val(a2[0]);
+		elem.find(".dlg_end_time .month").val(a2[1]);
+		elem.find(".dlg_end_time .day").val(a2[2]);
 	}
 }
 
@@ -1002,6 +1019,23 @@ function get_time_str(type, elem)
 
 		start = sw + ":" + start;
 		end = ew + ":" + end;
+	} else if(type == 'exact') {
+		var sw = parseInt(elem.find(".dlg_start_time .year").val());
+		var ew = parseInt(elem.find(".dlg_end_time .year").val());
+		var su = parseInt(elem.find(".dlg_start_time .month").val());
+		var eu = parseInt(elem.find(".dlg_end_time .month").val());
+		var sv = parseInt(elem.find(".dlg_start_time .day").val());
+		var ev = parseInt(elem.find(".dlg_end_time .day").val());
+		if(su < 1 || eu < 1 || su > 12 || eu > 12
+		 || sv < 1 || ev < 1 || sv > 31 || ev > 31
+		 || sw < 2000 || ew < 2000 || sw > 2037 || ew > 2037)
+		{
+			scan_alert("错误", "时间不合法！");
+			return false;
+		}
+
+		start = sw + ":" + su + ":" + sv + ":" + start;
+		end = ew + ":" + eu + ":" + ev + ":" + end;
 	}
 
 	return start + "," + end;
