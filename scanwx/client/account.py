@@ -6,6 +6,11 @@ from tornado.web import MissingArgumentError
 import scanwx.client
 import scanwx.config as config
 
+def encode_passwd(passwd):
+	' 编码密码 '
+	passwd = passwd.strip() + config.password_salt
+	return hashlib.sha1(passwd.encode('utf8')).hexdigest()
+
 class handler(scanwx.client.handler):
 	def get(self):
 		self.post()
@@ -43,7 +48,7 @@ class handler(scanwx.client.handler):
 			password = self.get_argument('password').strip()
 		except MissingArgumentError:
 			self.exit_with(config.status_error)
-		password = self.__encode_passwd(password)
+		password = encode_passwd(password)
 		user_info = self.db.get_row_dict('SELECT * \
 			FROM user WHERE username = %s', [username])
 		if user_info is None or user_info['password'] != password:
@@ -90,8 +95,8 @@ class handler(scanwx.client.handler):
 		if uid != str(self.get_current_user()) and not is_admin:
 			self.exit_with(config.status_forbidden)
 
-		password_old = self.__encode_passwd(password_old)
-		password_new = self.__encode_passwd(password_new)
+		password_old = encode_passwd(password_old)
+		password_new = encode_passwd(password_new)
 		info = self.db.get_row_dict('SELECT * FROM user WHERE uid = %s', [uid])
 		if not is_admin and password_old != info['password']:
 			self.exit_with(config.status_forbidden)
@@ -117,7 +122,7 @@ class handler(scanwx.client.handler):
 		except MissingArgumentError:
 			self.exit_with(config.status_error)
 
-		password = self.__encode_passwd(password)
+		password = encode_passwd(password)
 		if self.db.get_result('SELECT uid FROM user \
 			WHERE username = %s', [username]) is not None:
 			self.exit_with(config.status_error)
@@ -126,7 +131,3 @@ class handler(scanwx.client.handler):
 			VALUES (%s, %s, %s)', [username, password, 'common'])
 		self.exit_with(config.status_success)
 
-	def __encode_passwd(self, passwd):
-		' 编码密码 '
-		passwd = passwd.strip() + config.password_salt
-		return hashlib.sha1(passwd.encode('utf8')).hexdigest()

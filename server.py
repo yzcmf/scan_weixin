@@ -37,8 +37,11 @@ class scan_wx_application(tornado.web.Application):
 		super(scan_wx_application, self).__init__(handlers, **settings)
 
 if __name__ == '__main__':
-	app = scan_wx_application()
-	port = int(sys.argv[1])
-	app.listen(port)
-	tornado.ioloop.IOLoop.instance().start()
+	if len(sys.argv) != 2:
+		print("usage: server.py port")
+	else:
+		app = scan_wx_application()
+		port = int(sys.argv[1])
+		app.listen(port)
+		tornado.ioloop.IOLoop.instance().start()
 

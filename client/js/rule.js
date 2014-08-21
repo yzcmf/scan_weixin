@@ -20,7 +20,7 @@ $(document).ready( function() {
 	$("#rule_logout").click( function() {
 		$.getJSON("account?action=logout",
 			{}, function(data) {
-				window.open("login.php", "_self");
+				window.open("login.html", "_self");
 			} );
 	} );
 
@@ -296,19 +296,18 @@ function create_rule_modify(wrap, rule)
 
 	rule_modify.append(rule_name_wrap);
 
-	// 匹配次数区域
-	if(rule.match_type != "forward")
+	if(rule.match_type != "forward" && rule.match_type != "fallback")
 	{
+		// 匹配次数区域
 		var rule_match_req = create_rule_modify_input(
 			"需要匹配次数", rule.match_require, event_match_require_set);
 		rule_match_req.find("input[type=text]")
 			.keypress(limit_input_number);
 		rule_modify.append(rule_match_req);
-	}
 
-	// 消息记录区域
-	if(rule.match_type != "fallback" && rule.match_type != "forward")
+		// 消息记录区域
 		create_rule_modify_record(rule_modify, rule.record_require == 1); 
+	}
 
 	// 回复时间类型
 	create_rule_modify_time(rule_modify, rule.time_type, rule.time_str);
@@ -658,53 +657,15 @@ function event_insert_content_solve(body, elem, type, title)
 		function(data) {
 			if(!check_status(data.status))
 				return;
-			// 获取新加入元素的 ID 并显示
-			$.post("oper?action=get_rule_info", 
-				{ rid : rid, uid : global_uid }, 
-				function(data) {
-					if(!check_status(data.status))
-						return;
-
-					// 获取已经存在元素的 ID
-					var existed_elem = body.find(".rule_modify_content");
-					var existed_max = 0;
-					existed_elem.each( function() {
-						existed_max = Math.max(
-							existed_max, $(this).data("meta_id"));
-					} );
-
-					// 检测新元素 ID
-					var new_elem = -1;
-					if(type == "key")
-						type = "keyword";
-					var kr = data[type];
-					for(var len = kr.length, i = 0; i != len; ++i)
-					{
-						var mid = kr[i][0];
-						if(mid > existed_max)
-						{
-							new_elem = i;
-							break;
-						}
-					}
-
-					if(new_elem == -1)
-					{
-						scan_alert("错误", 
-							"无法找到新插入的关键字，请刷新页面");
-					} else {
-						var ul = body.find("ul");
-						var cont = kr[new_elem];
-						ul.children("li").last().css("border-bottom", "");
-						var it = create_single_item(cont, title);
-						it.hide();
-						it.fadeIn();
-						it.appendTo(ul);
-						ul.children("li").last()
-							.css("border-bottom", "0px");
-						check_ul_border(body);
-					}
-				}, "json" );
+			var ul = body.find("ul");
+			ul.children("li").last().css("border-bottom", "");
+			var it = create_single_item(data.content, title);
+			it.hide();
+			it.fadeIn();
+			it.appendTo(ul);
+			ul.children("li").last()
+				.css("border-bottom", "0px");
+			check_ul_border(body);
 		}, "json");
 	return true;
 }
@@ -1140,27 +1101,9 @@ function event_add_rule(elem, rule_num)
 		function(data) {
 			if(!check_status(data.status))
 				return;
-			$.post("oper?action=get_all_rules", 
-				{ uid : global_uid },
-				function(rules) {
-					if(!check_status(rules.status))
-						return;
-
-					// 查找新添加规则的 rid
-					var rid_pos = 0;
-					var current_rid = 0;
-					for(var i = 0; i != rules.count; ++i)
-					{
-						if(parseInt(rules[i].rid) > current_rid)
-						{
-							current_rid = parseInt(rules[i].rid);
-							rid_pos = i;
-						}
-					}
-
-					create_single_rule(rules.count, 
-						rules[rid_pos]).prependTo($("#rules_list"));
-				}, "json" );
+			var count = $(".rule_wrap_item").length + 1;
+			var elem = create_single_rule(count, data);
+			elem.prependTo($("#rules_list"));
 		}, "json");
 	return true;
 }

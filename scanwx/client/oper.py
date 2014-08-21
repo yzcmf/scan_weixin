@@ -72,8 +72,8 @@ class handler(scanwx.client.handler):
 				rule_type = self.get_argument('match_type')
 			except MissingArgumentError:
 				self.exit_with(config.status_error)
-			ret = self.__insert_rule(rule_name, rule_type, uid)
-			self.exit_with(ret)
+			status, ret = self.__insert_rule(rule_name, rule_type, uid)
+			self.exit_with(status, ret)
 		elif action == 'change_rule_name':
 			'''
 			重命名规则
@@ -188,7 +188,9 @@ class handler(scanwx.client.handler):
 					self.exit_with('语法错误：' + str(e))
 
 			self.__insert_meta(rid, key_type, value, uid)
-			self.exit_with(config.status_success)
+			meta_id = self.db.get_identity()
+			ret = { 'content': [meta_id, value] }
+			self.exit_with(config.status_success, ret)
 		elif action == 'set_reply_time':
 			'''
 			设置回复时间
@@ -348,22 +350,19 @@ class handler(scanwx.client.handler):
 		allow_rule_type = ('fallback', 'forward',
 			'full_match', 'sub_match', 'regex_match')
 		if rule_type not in allow_rule_type:
-			return config.status_error
+			return (config.status_error, None)
 
-		self.db.query('INSERT INTO reply_map (uid, rule_name, type) \
-			VALUES (%s, %s, %s)', [uid, rule_name, rule_type])
-		rid = -1
-		sql = 'SELECT id FROM reply_map WHERE rule_name = %s AND uid = %s'
-		for r in self.db.query_list(sql, [rule_name, uid]):
-			if r[0] > rid:
-				rid = r[0]
-		if rid == -1:
-			return config.status_error
+		sql = 'INSERT INTO reply_map \
+			   (uid, rule_name, type) \
+			   VALUES (%s, %s, %s)'
+		self.db.query(sql, [uid, rule_name, rule_type])
+		rid = self.db.get_identity()
 
 		if rule_type != 'fallback':
 			self.__insert_meta(rid, 'match_require', 1, uid)
 		self.__insert_meta(rid, 'time_type', config.time_all, uid)
-		return config.status_success
+		ret = { 'rid': rid, 'name': rule_name }
+		return (config.status_success, ret)
 
 	def __rename_rule(self, rid, rule_name, uid):
 		'''

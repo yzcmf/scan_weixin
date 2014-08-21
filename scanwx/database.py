@@ -56,6 +56,10 @@ class database:
 		if not result: return None
 		return result[0]
 
+	def get_identity(self):
+		'获取 @@IDENTITY'
+		return self.get_result('SELECT @@IDENTITY')
+
 	def __query(self, sql, curtype, args):
 		'查询数据'
 		self.__check()
