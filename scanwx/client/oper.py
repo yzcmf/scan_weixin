@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import re
 
 from tornado.web import MissingArgumentError
@@ -149,7 +150,7 @@ class handler(scanwx.client.handler):
 				sql = 'SELECT r.type FROM reply_map AS r \
 					   INNER JOIN reply_meta AS m \
 					   ON r.id = m.id AND m.index_key = %s'
-				match_type = self.db.get_result(sql, [content_index])
+				match_type = self.db.get_result(sql, [mid])
 				if match_type == 'regex_match':
 					try:
 						re.compile(content)

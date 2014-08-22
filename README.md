@@ -21,4 +21,6 @@ scan_weixin
 
 可以使用 nginx 做反向代理，配置参考 scan_weixin.conf
 
-启动服务请运行 `python3 server.py _port_`
+启动服务请运行 `python3 server.py port`
+
+另外，根目录下的 proxy.php 是转发用的，可以用它向真正的服务器转发微信请求

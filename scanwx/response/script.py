@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 
 # 遍历所有脚本文件并导入
