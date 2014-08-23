@@ -4,6 +4,7 @@ import re
 import time
 
 _regex_extract = re.compile(r'\[{3}((\s|.)+?)\]{3}')
+_regex_substitute_extract = re.compile(r'\{{3}((\s|.)+?)\}{3}')
 _regex_parse = re.compile(r'([a-z]+)="(.*?)"')
 _text_template = '''
 			<xml>
@@ -69,6 +70,28 @@ def _parse_news(content):
 		ret += templ % r
 	return (ret, len(result))
 
+def _regex_sub_func(groups):
+	def oper(matchobj):
+		content = matchobj.group(1).strip()
+		if int(content) >= len(groups):
+			return matchobj.group(0)
+		return groups[int(content)]
+	return oper
+
+def _regex_substitute(db, content, match_type, group):
+	if not group:
+		groups = []
+	elif match_type == 'regex_match':
+		groups = (group[0].group(0),) + group[0].groups()
+	else:
+		sql = 'SELECT reply_value FROM reply_meta \
+			   WHERE index_key IN (%s)' % ','.join(map(str, group))
+		groups = []
+		for data in db.query_list(sql):
+			groups.append(data[0])
+
+	return _regex_substitute_extract.sub(_regex_sub_func(groups), content)
+
 def _parse(content):
 	raw_content = content
 
@@ -80,20 +103,17 @@ def _parse(content):
 	if rtype not in ('news', 'text'):
 		return ('text', raw_content)
 	content = content[command.end():].lstrip()
+	return (rtype, content)
 
-	# 解析回复内容
-	if rtype == 'news':
-		return (rtype, _parse_news(content))
-	elif rtype == 'text':
-		return (rtype, content)
-
-def parse(to_user, from_user, content):
+def parse(db, to_user, from_user, content, match_type, info):
 	rtype, resp = _parse(content)
+	resp = _regex_substitute(db, resp, match_type, info)
 	now = int(time.time())
 	if rtype == 'text':
 		tmpl = _text_template
 		response = tmpl % (to_user, from_user, now, resp)
 	elif rtype == 'news':
 		tmpl = _news_template
+		resp = _parse_news(resp)
 		response = tmpl % (to_user, from_user, now, resp[1], resp[0])
 	return response

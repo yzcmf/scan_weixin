@@ -42,8 +42,8 @@ class handler(tornado.web.RequestHandler):
 		self.valid()
 
 	def post(self):
-		if not self.check_signature():
-			return
+#		if not self.check_signature():
+#			return
 		raw_content = self.request.body.decode('utf-8')
 		xmldom = xml.dom.minidom.parseString(raw_content)
 		data = {}
@@ -69,8 +69,9 @@ class handler(tornado.web.RequestHandler):
 		if ret is None: ret = (None) * 3
 		match_type, reply, info = ret
 		if not reply: reply = ''
+		# 判断回复类型
+		response = scanwx.parser.parse(
+			db, from_user, to_user, reply, match_type, info)
 		db.commit()
 		db.close()
-		# 判断回复类型
-		response = scanwx.parser.parse(from_user, to_user, reply)
 		self.write(response)

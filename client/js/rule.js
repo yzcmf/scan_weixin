@@ -582,6 +582,8 @@ function event_modify_content_solve(content, elem, title)
 		return false;
 	}
 
+	new_content = new_content.replace(/\n*$/, "");
+
 	$.post("oper?action=update_content", 
 		{ content_index : meta_id, 
 		  content : new_content,

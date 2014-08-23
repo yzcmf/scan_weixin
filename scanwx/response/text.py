@@ -31,7 +31,7 @@ def full_match(db, content, from_user, uid):
 	if check_meta(db, rid, 'reply_all'):
 		ret = '\n'.join(reply)
 	else: ret = random.choice(reply)
-	return ('full_match', ret, meta_id)
+	return ('full_match', ret, [meta_id])
 
 def rule_match(db, match_type, match_func, content, from_user, uid):
 	sql = "SELECT m.reply_value, m.id, m.index_key \
@@ -97,7 +97,7 @@ def rule_match(db, match_type, match_func, content, from_user, uid):
 	return (match_type, ret, match_record[rid])
 
 def sub_match_test(content, value, meta_id):
-	if content.find(value) != -1:
+	if content.find(value.strip()) != -1:
 		return (True, meta_id)
 	return (False, None)
 

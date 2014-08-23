@@ -153,9 +153,12 @@ class handler(scanwx.client.handler):
 				match_type = self.db.get_result(sql, [mid])
 				if match_type == 'regex_match':
 					try:
-						re.compile(content)
+						re.compile(value)
 					except Exception as e:
 						self.exit_with('语法错误：' + str(e))
+
+				while value.endswith('\n'):
+					value = content[:-1]
 
 				status = self.__update_meta(mid, value, uid)
 			else: status = self.__remove_meta(mid, uid)
@@ -179,6 +182,9 @@ class handler(scanwx.client.handler):
 			key_type = 'keyword'
 			if action == 'insert_reply':
 				key_type = 'reply'
+			else:
+				while value.endswith('\n'):
+					value = value[:-1]
 
 			sql = 'SELECT type FROM reply_map WHERE id = %s'
 			match_type = self.db.get_result(sql, [rid])
