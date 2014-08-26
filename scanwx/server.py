@@ -8,6 +8,7 @@ import tornado.web
 import scanwx.response.text as response_text
 import scanwx.response.fallback as response_fallback
 import scanwx.response.script as response_script
+import scanwx.response.event as response_event
 import scanwx.config as config
 import scanwx.parser
 
@@ -38,26 +39,11 @@ class handler(tornado.web.RequestHandler):
 			return True
 		return False
 
-	def get(self):
-		self.valid()
-
-	def post(self):
-#		if not self.check_signature():
-#			return
-		raw_content = self.request.body.decode('utf-8')
-		xmldom = xml.dom.minidom.parseString(raw_content)
-		data = {}
-		for d in xmldom.documentElement.childNodes:
-			if not d.childNodes: continue
-			data[d.nodeName] = d.childNodes[0].nodeValue
-		if data['MsgType'] != 'text':
-			return
+	def __reply_text(self, db, data):
 		content = data['Content'].strip()
 		from_user = data['FromUserName']
 		to_user = data['ToUserName']
 
-		db = self.application.db
-		db.connect()
 		if not content:
 			ret = response_fallback.response(db, content, from_user)
 		else:
@@ -72,6 +58,37 @@ class handler(tornado.web.RequestHandler):
 		# 判断回复类型
 		response = scanwx.parser.parse(
 			db, from_user, to_user, reply, match_type, info)
+		self.write(response)
+
+	def __reply_event(self, db, data):
+		from_user = data['FromUserName']
+		to_user = data['ToUserName']
+
+		ret = response_event.response(db, data['Event'], from_user)
+		if not ret: return
+		match_type, reply, info = ret
+		if not reply: reply = ''
+		response = scanwx.parser.parse(
+			db, from_user, to_user, reply, match_type, info)
+		self.write(response)
+
+	def get(self):
+		self.valid()
+
+	def post(self):
+		if not self.check_signature():
+			return
+		raw_content = self.request.body.decode('utf-8')
+		xmldom = xml.dom.minidom.parseString(raw_content)
+		data = {}
+		for d in xmldom.documentElement.childNodes:
+			if not d.childNodes: continue
+			data[d.nodeName] = d.childNodes[0].nodeValue
+		db = self.application.db
+		db.connect()
+		if data['MsgType'] == 'text':
+			self.__reply_text(db, data)
+		elif data['MsgType'] == 'event':
+			self.__reply_event(db, data)
 		db.commit()
 		db.close()
-		self.write(response)

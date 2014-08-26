@@ -8,7 +8,25 @@ import scanwx.database
 import scanwx.client.account as account
 
 def print_usage():
-	print("usage: account.py [register | list | delete]")
+	print("usage: account.py [register | list | delete | passwd]")
+
+def change_passwd(db):
+	username = input('Username: ')
+	sql = 'SELECT * FROM user WHERE username = %s'
+	if not db.get_result(sql, [username]):
+		print('Sorry, user "%s" not existed' % username)
+		return
+	password = getpass.getpass('Password: ')
+	repeat = getpass.getpass('Repeat password: ')
+	if password != repeat:
+		print('Sorry, password do not match')
+		return
+	password = hashlib.md5(password.encode('utf8')).hexdigest()
+	password = account.encode_passwd(password)
+	sql = 'UPDATE user SET password = %s WHERE username = %s'
+	db.query(sql, [password, username])
+	db.commit()
+	print('Succeeded!')
 
 def register(db):
 	username = input('Username: ')
@@ -68,6 +86,8 @@ def main(action):
 		list_user(db)
 	elif action == 'delete':
 		delete_user(db)
+	elif action == 'passwd':
+		change_passwd(db)
 	else: print_usage()
 
 	db.close()
