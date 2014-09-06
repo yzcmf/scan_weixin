@@ -43,31 +43,28 @@ def _parse_news(content):
 	command = _regex_extract.match(content[start_pos:])
 	while command:
 		args = _parse_argument(command.group(1))
-		if 'url' not in args or 'pic' not in args:
-			start_pos += command.end()
-		else:
-			if result:
-				t = content[:start_pos + command.start()]
-				result[-1]['content'] = t
-			if 'title' not in args:
-				args['title'] = ''
-			result.append(args)
-			content = content[start_pos + command.end():].lstrip()
-			start_pos = 0
+		if result:
+			t = content[:start_pos + command.start()]
+			result[-1]['content'] = t
+		result.append(args)
+		content = content[start_pos + command.end():].lstrip()
+		start_pos = 0
 		command = _regex_extract.search(content[start_pos:])
 	if not result: return ('', 0)
 	result[-1]['content'] = content
-	templ = '''
-		<item>
-		<Title><![CDATA[%(title)s]]></Title>
-		<Description><![CDATA[%(content)s]]></Description>
-		<PicUrl><![CDATA[%(pic)s]]></PicUrl>
-		<Url><![CDATA[%(url)s]]></Url>
-		</item>
-			'''
+	templ = '<%(name)s><![CDATA[%(value)s]]></%(name)s>'
 	ret = ''
 	for r in result:
-		ret += templ % r
+		ret += '<item>'
+		if 'content' in r:
+			ret += templ % { 'name': 'Description', 'value': r['content'] }
+		if 'url' in r:
+			ret += templ % { 'name': 'Url', 'value': r['url'] }
+		if 'pic' in r:
+			ret += templ % { 'name': 'PicUrl', 'value': r['pic'] }
+		if 'title' in r:
+			ret += templ % { 'name': 'Title', 'value': r['title'] }
+		ret += '</item>'
 	return (ret, len(result))
 
 def _regex_sub_func(groups):

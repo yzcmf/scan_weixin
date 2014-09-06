@@ -13,8 +13,9 @@ for root, dirs, files in os.walk('scanwx/response/scripts'):
 
 def response(db, content, from_user):
 	for script in scripts:
-		if script.check(db, content, from_user):
-			result = script.response(db, content, from_user)
-			if result is not None:
-				return ('script', result, None)
+		check_result = script.check(db, content, from_user)
+		if not check_result: continue
+		result = script.response(db, content, from_user, check_result)
+		if result is not None:
+			return ('script', result, None)
 	return None

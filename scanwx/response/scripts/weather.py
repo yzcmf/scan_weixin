@@ -12,7 +12,7 @@ def check(db, content, from_user):
 			return True
 	return False
 
-def response(db, content, from_user):
+def response(db, content, from_user, check_result):
 	url = 'http://api.map.baidu.com/telematics/v3/weather?'
 	url += urllib.parse.urlencode({ 'output': 'json', 'ak': baiduapi_ak })
 	content = content[content.find('#', 1) + 1:].strip()
