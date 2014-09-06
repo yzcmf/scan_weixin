@@ -224,7 +224,9 @@ function create_rule_body(wrap, rule)
 	create_rule_body_item("回复类型", 
 		map_reply_type(rule.match_type)).appendTo(rule_body);
 
-	if(rule.match_type != "fallback" && rule.match_type != "forward")
+	if(rule.match_type != "fallback" 
+	 && rule.match_type != "forward"
+	 && rule.match_type != "pushup")
 	{
 		var record_str = rule.record_require == "1" ? "true" : "false";
 		record_str += "，共 " + rule.record_num + " 条";
@@ -296,7 +298,9 @@ function create_rule_modify(wrap, rule)
 
 	rule_modify.append(rule_name_wrap);
 
-	if(rule.match_type != "forward" && rule.match_type != "fallback")
+	if(rule.match_type != "forward" 
+	 && rule.match_type != "pushup"
+	 && rule.match_type != "fallback")
 	{
 		// 匹配次数区域
 		var rule_match_req = create_rule_modify_input(

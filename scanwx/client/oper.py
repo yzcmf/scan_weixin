@@ -354,7 +354,7 @@ class handler(scanwx.client.handler):
 		rule_type 规则类型
 		uid       用户 ID
 		'''
-		allow_rule_type = ('fallback', 'forward',
+		allow_rule_type = ('pushup', 'fallback', 'forward',
 			'full_match', 'sub_match', 'regex_match')
 		if rule_type not in allow_rule_type:
 			return (config.status_error, None)
@@ -365,7 +365,7 @@ class handler(scanwx.client.handler):
 		self.db.query(sql, [uid, rule_name, rule_type])
 		rid = self.db.get_identity()
 
-		if rule_type != 'fallback':
+		if rule_type not in ('fallback', 'forward', 'pushup'):
 			self.__insert_meta(rid, 'match_require', 1, uid)
 		self.__insert_meta(rid, 'time_type', config.time_all, uid)
 		ret = { 'rid': rid, 'name': rule_name }

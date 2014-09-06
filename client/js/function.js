@@ -63,6 +63,8 @@ function map_reply_type(type)
 		return "正则表达式";
 	case "forward":
 		return "forward";
+	case "pushup":
+		return "公告";
 	default:
 		return "fallback";
 	}

@@ -6,6 +6,7 @@ import xml.dom.minidom
 
 import tornado.web
 import scanwx.response.text as response_text
+import scanwx.response.pushup as response_pushup
 import scanwx.response.fallback as response_fallback
 import scanwx.response.script as response_script
 import scanwx.response.event as response_event
@@ -48,6 +49,8 @@ class handler(tornado.web.RequestHandler):
 			ret = response_fallback.response(db, content, from_user)
 		else:
 			ret = response_script.response(db, content, from_user)
+			if ret is None or ret[1] is None:
+				ret = response_pushup.response(db, content, from_user)
 			if ret is None or ret[1] is None:
 				ret = response_text.response(db, content, from_user)
 			if ret is None or ret[1] is None or not ret[1].strip():
